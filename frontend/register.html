@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Inscription à MessagerieApp">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <title>Inscription - MessagerieApp</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/auth.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+</head>
+<body class="auth-page">
+    <!-- Conteneur principal -->
+    <main class="auth-container" role="main">
+        <!-- Carte d'authentification -->
+        <div class="auth-card">
+            <!-- En-tête -->
+            <header class="auth-header">
+                <img src="images/logo.svg" alt="Logo MessagerieApp" class="logo" width="60" height="60">
+                <h1 class="auth-title">MessagerieApp</h1>
+                <p class="auth-subtitle">Créez votre compte gratuitement</p>
+            </header>
+
+            <!-- Navigation -->
+            <nav class="auth-nav" role="navigation" aria-label="Navigation authentification">
+                <a href="login.html" class="auth-tab">
+                    Connexion
+                </a>
+                <button class="auth-tab active" aria-current="page">
+                    Inscription
+                </button>
+            </nav>
+
+            <!-- Formulaire d'inscription -->
+            <section class="auth-form-section">
+                <div class="auth-form">
+                    <!-- Champ Nom -->
+                    <div class="form-group">
+                        <label for="registerName" class="form-label">
+                            <span class="label-text">Nom complet</span>
+                            <span class="label-required" aria-label="requis">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="registerName" 
+                            name="name"
+                            class="form-input" 
+                            placeholder="Jean Dupont"
+                            autocomplete="name"
+                            required
+                            aria-required="true"
+                            minlength="2"
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <!-- Champ Email -->
+                    <div class="form-group">
+                        <label for="registerEmail" class="form-label">
+                            <span class="label-text">Email</span>
+                            <span class="label-required" aria-label="requis">*</span>
+                        </label>
+                        <input 
+                            type="email" 
+                            id="registerEmail" 
+                            name="email"
+                            class="form-input" 
+                            placeholder="votre@email.com"
+                            autocomplete="email"
+                            required
+                            aria-required="true"
+                        >
+                    </div>
+
+                    <!-- Champ Mot de passe -->
+                    <div class="form-group">
+                        <label for="registerPassword" class="form-label">
+                            <span class="label-text">Mot de passe</span>
+                            <span class="label-required" aria-label="requis">*</span>
+                        </label>
+                        <input 
+                            type="password" 
+                            id="registerPassword" 
+                            name="password"
+                            class="form-input" 
+                            placeholder="••••••••"
+                            autocomplete="new-password"
+                            required
+                            aria-required="true"
+                            minlength="6"
+                            aria-describedby="passwordRequirements"
+                        >
+                        <small id="passwordRequirements" class="form-help">
+                            Minimum 6 caractères
+                        </small>
+                    </div>
+
+                    <!-- Bouton d'inscription -->
+                    <button 
+                        type="button" 
+                        id="registerButton" 
+                        class="btn btn-primary btn-block"
+                        aria-label="S'inscrire"
+                    >
+                        <span class="btn-text">S'inscrire</span>
+                        <span class="btn-loader hidden" aria-hidden="true"></span>
+                    </button>
+
+                    <!-- Lien vers connexion -->
+                    <p class="auth-link">
+                        Vous avez déjà un compte ? 
+                        <a href="login.html">Se connecter</a>
+                    </p>
+                </div>
+            </section>
+
+            <!-- Zone de messages -->
+            <div id="messageZone" role="alert" aria-live="polite" class="hidden">
+                <div id="errorMessage" class="alert alert-error hidden"></div>
+                <div id="successMessage" class="alert alert-success hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils/validation.js"></script>
+    <script>
+        /**
+         * Initialisation de la page d'inscription
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            const registerButton = document.getElementById('registerButton');
+            const nameInput = document.getElementById('registerName');
+            const emailInput = document.getElementById('registerEmail');
+            const passwordInput = document.getElementById('registerPassword');
+
+            /**
+             * Gère la soumission du formulaire d'inscription
+             */
+            async function handleRegister() {
+                const name = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+
+                // Validation
+                if (!name || !email || !password) {
+                    showError('Veuillez remplir tous les champs');
+                    return;
+                }
+
+                if (name.length < 2) {
+                    showError('Le nom doit contenir au moins 2 caractères');
+                    return;
+                }
+
+                if (!isValidEmail(email)) {
+                    showError('Format d\'email invalide');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showError('Le mot de passe doit contenir au moins 6 caractères');
+                    return;
+                }
+
+                // Chargement
+                setLoading(true);
+
+                try {
+                    const result = await Auth.register(name, email, password);
+                    
+                    if (result.success) {
+                        showSuccess('Inscription réussie ! Redirection...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 500);
+                    } else {
+                        showError(result.message || 'Erreur d\'inscription');
+                        setLoading(false);
+                    }
+                } catch (error) {
+                    showError('Erreur de connexion au serveur');
+                    setLoading(false);
+                }
+            }
+
+            function setLoading(isLoading) {
+                const btnText = registerButton.querySelector('.btn-text');
+                const btnLoader = registerButton.querySelector('.btn-loader');
+                
+                registerButton.disabled = isLoading;
+                btnText.classList.toggle('hidden', isLoading);
+                btnLoader.classList.toggle('hidden', !isLoading);
+            }
+
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                const messageZone = document.getElementById('messageZone');
+                
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+                messageZone.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 5000);
+            }
+
+            function showSuccess(message) {
+                const successDiv = document.getElementById('successMessage');
+                const messageZone = document.getElementById('messageZone');
+                
+                successDiv.textContent = message;
+                successDiv.classList.remove('hidden');
+                messageZone.classList.remove('hidden');
+            }
+
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            // Event listeners
+            registerButton.addEventListener('click', handleRegister);
+            
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleRegister();
+                }
+            });
+
+            nameInput.focus();
+        });
+    </script>
+</body>
+</html>

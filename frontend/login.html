@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Connexion à MessagerieApp">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <title>Connexion - MessagerieApp</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/auth.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+</head>
+<body class="auth-page">
+    <!-- Conteneur principal de la page d'authentification -->
+    <main class="auth-container" role="main">
+        <!-- Carte d'authentification -->
+        <div class="auth-card">
+            <!-- En-tête avec logo et titre -->
+            <header class="auth-header">
+                <img src="images/logo.svg" alt="Logo MessagerieApp" class="logo" width="60" height="60">
+                <h1 class="auth-title">MessagerieApp</h1>
+                <p class="auth-subtitle">Messagerie sécurisée en temps réel</p>
+            </header>
+
+            <!-- Navigation entre Connexion et Inscription -->
+            <nav class="auth-nav" role="navigation" aria-label="Navigation authentification">
+                <button class="auth-tab active" aria-current="page">
+                    Connexion
+                </button>
+                <a href="register.html" class="auth-tab">
+                    Inscription
+                </a>
+            </nav>
+
+            <!-- Formulaire de connexion -->
+            <section class="auth-form-section">
+                <div class="auth-form">
+                    <!-- Champ Email -->
+                    <div class="form-group">
+                        <label for="loginEmail" class="form-label">
+                            <span class="label-text">Email</span>
+                            <span class="label-required" aria-label="requis">*</span>
+                        </label>
+                        <input 
+                            type="email" 
+                            id="loginEmail" 
+                            name="email"
+                            class="form-input" 
+                            placeholder="votre@email.com"
+                            autocomplete="email"
+                            required
+                            aria-required="true"
+                            aria-describedby="emailHelp"
+                        >
+                        <small id="emailHelp" class="form-help hidden">
+                            Entrez votre adresse email
+                        </small>
+                    </div>
+
+                    <!-- Champ Mot de passe -->
+                    <div class="form-group">
+                        <label for="loginPassword" class="form-label">
+                            <span class="label-text">Mot de passe</span>
+                            <span class="label-required" aria-label="requis">*</span>
+                        </label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            name="password"
+                            class="form-input" 
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            required
+                            aria-required="true"
+                            aria-describedby="passwordHelp"
+                        >
+                        <small id="passwordHelp" class="form-help hidden">
+                            Entrez votre mot de passe
+                        </small>
+                    </div>
+
+                    <!-- Bouton de connexion -->
+                    <button 
+                        type="button" 
+                        id="loginButton" 
+                        class="btn btn-primary btn-block"
+                        aria-label="Se connecter"
+                    >
+                        <span class="btn-text">Se connecter</span>
+                        <span class="btn-loader hidden" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Informations de démonstration -->
+            <aside class="demo-info" role="complementary">
+                <p class="demo-title">Comptes de démonstration</p>
+                <div class="demo-accounts">
+                    <div class="demo-account">
+                        <strong>Admin:</strong>
+                        <code>admin@example.com</code> / <code>admin123</code>
+                    </div>
+                    <div class="demo-account">
+                        <strong>Utilisateur:</strong>
+                        <code>user1@example.com</code> / <code>user123</code>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Zone de messages (succès/erreur) -->
+            <div id="messageZone" role="alert" aria-live="polite" class="hidden">
+                <div id="errorMessage" class="alert alert-error hidden"></div>
+                <div id="successMessage" class="alert alert-success hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils/validation.js"></script>
+    <script>
+        /**
+         * Initialisation de la page de connexion
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginButton = document.getElementById('loginButton');
+            const emailInput = document.getElementById('loginEmail');
+            const passwordInput = document.getElementById('loginPassword');
+
+            /**
+             * Gère la soumission du formulaire de connexion
+             */
+            async function handleLogin() {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+
+                // Validation côté client
+                if (!email || !password) {
+                    showError('Veuillez remplir tous les champs');
+                    return;
+                }
+
+                if (!isValidEmail(email)) {
+                    showError('Format d\'email invalide');
+                    return;
+                }
+
+                // Désactiver le bouton et afficher le loader
+                setLoading(true);
+
+                try {
+                    const result = await Auth.login(email, password);
+                    
+                    if (result.success) {
+                        showSuccess('Connexion réussie ! Redirection...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 500);
+                    } else {
+                        showError(result.message || 'Erreur de connexion');
+                        setLoading(false);
+                    }
+                } catch (error) {
+                    showError('Erreur de connexion au serveur');
+                    setLoading(false);
+                }
+            }
+
+            /**
+             * Active/désactive l'état de chargement
+             */
+            function setLoading(isLoading) {
+                const btnText = loginButton.querySelector('.btn-text');
+                const btnLoader = loginButton.querySelector('.btn-loader');
+                
+                loginButton.disabled = isLoading;
+                btnText.classList.toggle('hidden', isLoading);
+                btnLoader.classList.toggle('hidden', !isLoading);
+            }
+
+            /**
+             * Affiche un message d'erreur
+             */
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                const messageZone = document.getElementById('messageZone');
+                
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+                messageZone.classList.remove('hidden');
+                
+                // Masquer après 5 secondes
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 5000);
+            }
+
+            /**
+             * Affiche un message de succès
+             */
+            function showSuccess(message) {
+                const successDiv = document.getElementById('successMessage');
+                const messageZone = document.getElementById('messageZone');
+                
+                successDiv.textContent = message;
+                successDiv.classList.remove('hidden');
+                messageZone.classList.remove('hidden');
+            }
+
+            /**
+             * Valide le format d'un email
+             */
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            // Event listeners
+            loginButton.addEventListener('click', handleLogin);
+            
+            // Permettre la soumission avec Enter
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
+
+            // Focus automatique sur le champ email
+            emailInput.focus();
+        });
+    </script>
+</body>
+</html>

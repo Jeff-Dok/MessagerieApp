@@ -1,0 +1,60 @@
+{
+  "name": "messagerie-app",
+  "version": "2.0.0",
+  "description": "Application de messagerie sécurisée avec partage d'images et expiration automatique",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "echo 'Frontend n a pas de dépendances npm'",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "db:init": "cd backend && npm run db:init",
+    "db:seed": "cd backend && npm run db:seed",
+    "db:reset": "cd backend && npm run db:reset",
+    "test": "cd backend && npm test",
+    "test:coverage": "cd backend && npm run test:coverage",
+    "lint": "cd backend && npm run lint",
+    "format": "cd backend && npm run format",
+    "build": "echo 'Build process'",
+    "clean": "rm -rf node_modules backend/node_modules",
+    "postinstall": "npm run install:all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/votre-username/messagerie-app.git"
+  },
+  "keywords": [
+    "messaging",
+    "chat",
+    "real-time",
+    "socket.io",
+    "express",
+    "postgresql",
+    "image-sharing",
+    "secure",
+    "jwt"
+  ],
+  "author": {
+    "name": "Votre Nom",
+    "email": "votre.email@example.com",
+    "url": "https://github.com/votre-username"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/votre-username/messagerie-app/issues"
+  },
+  "homepage": "https://github.com/votre-username/messagerie-app#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2"
+  },
+  "dependencies": {},
+  "workspaces": [
+    "backend"
+  ]
+}

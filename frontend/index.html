@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <!-- Meta tags essentiels -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO -->
+    <meta name="description" content="Application de messagerie sécurisée avec partage d'images et expiration automatique">
+    <meta name="keywords" content="messagerie, chat, sécurisé, temps réel">
+    <meta name="author" content="MessagerieApp">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="MessagerieApp - Messagerie Sécurisée">
+    <meta property="og:description" content="Application de messagerie en temps réel avec partage d'images sécurisé">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+    
+    <title>MessagerieApp - Accueil</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+</head>
+<body>
+    <!-- 
+        Page de redirection automatique
+        Redirige vers login.html ou dashboard.html selon l'état d'authentification
+    -->
+    
+    <script>
+        /**
+         * Redirection automatique
+         * Vérifie si l'utilisateur est authentifié et redirige en conséquence
+         */
+        (function() {
+            const token = localStorage.getItem('authToken');
+            
+            if (token) {
+                // Utilisateur connecté -> Dashboard
+                window.location.href = 'dashboard.html';
+            } else {
+                // Utilisateur non connecté -> Login
+                window.location.href = 'login.html';
+            }
+        })();
+    </script>
+</body>
+</html>

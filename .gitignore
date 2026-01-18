@@ -1,0 +1,125 @@
+# ============================================
+# GITIGNORE GLOBAL - Fichiers à ignorer
+# ============================================
+
+# Dépendances
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Variables d'environnement
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pids/
+*.pid
+*.seed
+*.pid.lock
+lib-cov/
+
+# Coverage des tests
+coverage/
+*.lcov
+.nyc_output/
+.grunt/
+.lock-wscript
+
+# Fichiers de build et distribution
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+
+# Fichiers système
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*.swn
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vs/
+*.code-workspace
+
+# Fichiers temporaires
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Uploads et médias uploadés
+uploads/
+uploaded/
+public/uploads/
+
+# Base de données locale
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Certificats et clés privées
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+certs/
+
+# Documentation générée
+docs/generated/
+coverage/
+.docz/
+
+# Tests
+test-results/
+playwright-report/
+.pytest_cache/
+
+# OS
+*.pid
+*.seed
+*.pid.lock
+
+# Divers
+.wakatime-project
+.scannerwork/
+sonar-project.properties

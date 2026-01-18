@@ -1,0 +1,183 @@
+/**
+ * ============================================
+ * AUTH CSS - Pages d'authentification
+ * ============================================
+ * 
+ * Styles pour les pages de connexion et d'inscription
+ * 
+ * @author MessagerieApp
+ * @version 2.0.0
+ */
+
+/* Page d'authentification */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+    padding: var(--spacing-4);
+}
+
+/* Container principal */
+.auth-container {
+    width: 100%;
+    max-width: 480px;
+}
+
+/* Carte d'authentification */
+.auth-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-2xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--spacing-8);
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* En-tête */
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-6);
+}
+
+.auth-header .logo {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto var(--spacing-4);
+}
+
+.auth-title {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-2);
+}
+
+.auth-subtitle {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* Navigation entre login/register */
+.auth-nav {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: var(--spacing-6);
+}
+
+.auth-tab {
+    flex: 1;
+    padding: var(--spacing-3) var(--spacing-4);
+    text-align: center;
+    color: var(--text-secondary);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-sm);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+}
+
+.auth-tab:hover:not(.active) {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+.auth-tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* Section du formulaire */
+.auth-form-section {
+    margin-bottom: var(--spacing-6);
+}
+
+.auth-form .form-group:last-of-type {
+    margin-bottom: var(--spacing-6);
+}
+
+/* Lien vers autre page */
+.auth-link {
+    text-align: center;
+    margin-top: var(--spacing-4);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.auth-link a {
+    color: var(--color-primary);
+    font-weight: var(--font-semibold);
+    transition: color var(--transition-base);
+}
+
+.auth-link a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+/* Informations de démonstration */
+.demo-info {
+    margin-top: var(--spacing-6);
+    padding: var(--spacing-4);
+    background-color: var(--bg-tertiary);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--border-color);
+}
+
+.demo-title {
+    font-weight: var(--font-semibold);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-3);
+}
+
+.demo-accounts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.demo-account {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.demo-account strong {
+    color: var(--text-primary);
+    font-weight: var(--font-semibold);
+}
+
+.demo-account code {
+    font-family: var(--font-mono);
+    background-color: var(--gray-200);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.85em;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-card {
+        padding: var(--spacing-6);
+    }
+    
+    .auth-title {
+        font-size: var(--text-2xl);
+    }
+}
