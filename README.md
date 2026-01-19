@@ -65,7 +65,7 @@ messagerie-app/
 
 1. **Cloner le repository**
 ```bash
-git clone https://github.com/votre-username/messagerie-app.git
+git clone https://github.com/Jeff-Dok/MessagerieApp.git
 cd messagerie-app
 ```
 
@@ -135,6 +135,7 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 - [Documentation Backend](./backend/README.md)
 - [Documentation API](./docs/API.md)
+- [Documentation Profils](./docs/PROFILS.md)
 - [Guide Utilisateur](./docs/GUIDE.md)
 
 ## 🎮 Utilisation
@@ -243,7 +244,7 @@ MIT License - voir [LICENSE](LICENSE)
 
 ## 👥 Auteurs
 
-- Votre Nom - [@votre_compte](https://github.com/votre_compte)
+- Jean-François Gagnon - [@JeffDok](https://github.com/Jeff-Dok)
 
 ## 🙏 Remerciements
 
@@ -253,16 +254,6 @@ MIT License - voir [LICENSE](LICENSE)
 
 ## 📞 Support
 
-- 📧 Email: support@messagerie-app.com
-- 🐛 Issues: [GitHub Issues](https://github.com/votre-username/messagerie-app/issues)
+- 📧 Email: email@email.com
+- 🐛 Issues: [GitHub Issues](https://github.com/Jeff-Dok/MessagerieApp/issues)
 - 💬 Discord: [Lien Discord]
-
-## 🗺️ Roadmap
-
-- [ ] Groupes de discussion
-- [ ] Appels vidéo/audio WebRTC
-- [ ] Partage de fichiers
-- [ ] Émojis et réactions
-- [ ] Recherche de messages
-- [ ] Thèmes personnalisables
-- [ ] Application mobile (React Native)

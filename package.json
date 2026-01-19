@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/votre-username/messagerie-app.git"
+    "url": "git+https://github.com/Jeff-Dok/MessagerieApp.git"
   },
   "keywords": [
     "messaging",
@@ -36,15 +36,15 @@
     "jwt"
   ],
   "author": {
-    "name": "Votre Nom",
-    "email": "votre.email@example.com",
-    "url": "https://github.com/votre-username"
+    "name": "Jean-François G.",
+    "email": "jn.francois.gagnon@gmail.com",
+    "url": "https://github.com/Jeff-Dok"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/votre-username/messagerie-app/issues"
+    "url": "https://github.com/Jeff-Dok/MessagerieApp/issues"
   },
-  "homepage": "https://github.com/votre-username/messagerie-app#readme",
+  "homepage": "https://github.com/Jeff-Dok/MessagerieApp#readme",
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=6.0.0"

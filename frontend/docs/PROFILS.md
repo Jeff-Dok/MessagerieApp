@@ -25,7 +25,7 @@ Le système de profils étendus permet aux utilisateurs de créer des profils co
 ✅ **Upload de photos** de profil (max 5 MB)  
 ✅ **Panneau admin** pour gérer les validations  
 ✅ **Notifications temps réel** via Socket.io  
-✅ **Restriction d'âge** (13 ans minimum - COPPA compliance)
+✅ **Restriction d'âge** (18 ans minimum - COPPA compliance)
 
 ---
 
@@ -42,7 +42,7 @@ Le système de profils étendus permet aux utilisateurs de créer des profils co
 - Mot de passe (6+ caractères)
 
 **Étape 2 : Informations personnelles**
-- Date de naissance (13+ ans requis)
+- Date de naissance (18+ ans requis)
 - Ville de résidence
 - Bio (optionnelle, max 500 caractères)
 
@@ -397,7 +397,7 @@ Récupère les statistiques.
 ✅ **Pseudo :** Regex strict, longueur 3-50, caractères autorisés uniquement  
 ✅ **Email :** Validation format + unicité  
 ✅ **Mot de passe :** Minimum 6 caractères, hashé avec bcrypt (10 rounds)  
-✅ **Date de naissance :** Vérification âge minimum (13 ans)  
+✅ **Date de naissance :** Vérification âge minimum (18 ans)  
 ✅ **Bio :** Limitation 500 caractères  
 ✅ **Photo :** Type MIME vérifié, taille max 5MB
 
@@ -419,7 +419,7 @@ Récupère les statistiques.
 
 👶 **Âge minimum :** 13 ans strictement appliqué  
 👶 **Validation :** Côté client ET serveur  
-👶 **Blocage :** Inscription impossible si < 13 ans
+👶 **Blocage :** Inscription impossible si < 18 ans
 
 ---
 
@@ -430,7 +430,7 @@ Récupère les statistiques.
 ```javascript
 // backend/utils/constants.js
 const AGE_CONFIG = {
-  MINIMUM: 16 // Au lieu de 13
+  MINIMUM: 18 // Au lieu de 18
 };
 ```
 
@@ -479,7 +479,7 @@ const PROFILE_PHOTO_CONFIG = {
 ### Test validation d'âge
 
 ```bash
-# 1. Entrer date de naissance < 13 ans
+# 1. Entrer date de naissance < 18 ans
 # 2. Vérifier erreur de validation
 # 3. Inscription bloquée
 ```
@@ -510,7 +510,7 @@ const PROFILE_PHOTO_CONFIG = {
 
 ---
 
-## 🚧 Améliorations futures
+## 🚧 Améliorations futures possible
 
 - [ ] Email automatique à la validation/rejet
 - [ ] Historique des validations par admin
@@ -555,9 +555,9 @@ UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
 
 ## 📞 Support
 
-- **Email :** support@messagerie-app.com
+- **Email :** email@email.com
 - **Documentation :** /docs
-- **Issues :** GitHub Issues
+- **Issues :** GitHub Issues (https://github.com/Jeff-Dok/MessagerieApp/issues)
 
 ---
 
@@ -565,4 +565,4 @@ UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
 **Date :** 18 janvier 2026  
 **Auteur :** MessagerieApp Team
 
-✨ Développé avec ❤️
+✨ Développé avec ❤️ par JeffDok utilisant Anthropic (Claude AI)

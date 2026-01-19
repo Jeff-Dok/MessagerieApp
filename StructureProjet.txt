@@ -1,14 +1,17 @@
 messagerie-app/
 │
-├── README.md                          # Documentation principale
-├── .gitignore                         # Fichiers à ignorer
-├── package.json                       # Configuration du projet
+├── README.md                         # Documentation principale
+├── .gitignore                        # Fichiers à ignorer
+├── package.json                      # Configuration du projet
+├── StructureProjet.txt               # Ce fichier
 │
-├── backend/                           # Serveur backend
-│   ├── server.js                      # Point d'entrée
-│   ├── package.json                   # Dépendances backend
+├── backend/                          # Serveur backend
+│   ├── server.js                     # Point d'entrée
+│   ├── package.json                  # Dépendances backend
 │   ├── .env                          # Variables d'environnement
 │   ├── .env.example                  # Exemple de configuration
+│   ├── READMEbackend.md              # Documentation backend
+│   ├── .gitignore                    # Fichiers à ignorer
 │   │
 │   ├── config/                       # Configuration
 │   │   ├── database.js               # Connexion PostgreSQL
@@ -21,12 +24,14 @@ messagerie-app/
 │   │   └── Message.js                # Modèle Message
 │   │
 │   ├── controllers/                  # Logique métier
+│   │   ├── adminController.js        # Gestion administrateurs
 │   │   ├── authController.js         # Authentification
 │   │   ├── userController.js         # Gestion utilisateurs
 │   │   └── messageController.js      # Gestion messages
 │   │
 │   ├── routes/                       # Routes API
 │   │   ├── index.js                  # Routes centralisées
+│   │   ├── admin.js                  # Routes admin
 │   │   ├── auth.js                   # Routes auth
 │   │   ├── users.js                  # Routes users
 │   │   └── messages.js               # Routes messages
@@ -39,6 +44,7 @@ messagerie-app/
 │   │
 │   ├── services/                     # Services métier
 │   │   ├── imageService.js           # Traitement images
+│   │   ├── profilePhotoService.js    # Traitement photos de profil
 │   │   ├── socketService.js          # Gestion Socket.io
 │   │   └── cleanupService.js         # Nettoyage automatique
 │   │
@@ -48,13 +54,16 @@ messagerie-app/
 │   │   └── constants.js              # Constantes
 │   │
 │   └── database/                     # Scripts SQL
-│       ├── init.sql                  # Initialisation
+│       ├── init.sql                  # Initialisation DB
+│       ├── migration_profiles.sql    # Ajoute nouveaux champs profils
 │       └── seed.sql                  # Données de test
 │
 └── frontend/                         # Application frontend
     ├── index.html                    # Page d'accueil
     ├── login.html                    # Page de connexion
+    ├── admin.html                    # Page d'administration
     ├── register.html                 # Page d'inscription
+    ├── pending.html                  # Page de profil en attente
     ├── dashboard.html                # Interface principale
     │
     ├── css/                          # Styles
@@ -67,6 +76,7 @@ messagerie-app/
     │
     ├── js/                           # JavaScript
     │   ├── config.js                 # Configuration
+    │   ├── app.js                    # Point d'entrée
     │   ├── api.js                    # Client API
     │   ├── socket.js                 # Client Socket.io
     │   ├── auth.js                   # Authentification
@@ -75,15 +85,18 @@ messagerie-app/
     │   │   ├── messageRenderer.js    # Rendu messages
     │   │   ├── conversationList.js   # Liste conversations
     │   │   └── notifications.js      # Notifications
-    │   ├── services/                 # Services frontend
-    │   │   ├── imageHandler.js       # Gestion images
-    │   │   └── expirationManager.js  # Gestion expiration
-    │   └── app.js                    # Point d'entrée
+    │   └── services/                 # Services frontend
+    │       ├── imageHandler.js       # Gestion images
+    │       └── expirationManager.js  # Gestion expiration
     │
-    ├── images/                       # Ressources
+    ├── images/                       # Ressources images
     │   ├── logo.svg
     │   └── icons/
+    │       ├── message.svg
+    │       ├── send.svg
+    │       └── user.svg
     │
     └── docs/                         # Documentation
         ├── API.md                    # Documentation API
+        ├── PROFILS.md                # Documentation profil
         └── GUIDE.md                  # Guide utilisateur
