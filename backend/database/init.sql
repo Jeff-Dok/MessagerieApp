@@ -15,6 +15,7 @@ CREATE DATABASE messagerie_db
     ENCODING = 'UTF8'
     LC_COLLATE = 'fr_FR.UTF-8'
     LC_CTYPE = 'fr_FR.UTF-8'
+    TEMPLATE template0
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
@@ -181,10 +182,10 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres;
 -- MESSAGE DE SUCCÈS
 -- ============================================
 
-DO $$ 
+DO $$
 BEGIN
     RAISE NOTICE '✅ Base de données initialisée avec succès!';
-    RAISE NOTICE '📊 Tables créées: users, messages';
-    RAISE NOTICE '🔍 Index créés pour optimisation';
-    RAISE NOTICE '⚡ Triggers configurés';
+    RAISE NOTICE '✅ Tables créées: users, messages';
+    RAISE NOTICE '✅ Index créés pour optimisation';
+    RAISE NOTICE '✅ Triggers configurés';
 END $$;

@@ -17,8 +17,7 @@
     "lint": "cd backend && npm run lint",
     "format": "cd backend && npm run format",
     "build": "echo 'Build process'",
-    "clean": "rm -rf node_modules backend/node_modules",
-    "postinstall": "npm run install:all"
+    "clean": "rm -rf node_modules backend/node_modules"
   },
   "repository": {
     "type": "git",
@@ -51,10 +50,6 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "nodemon": "^3.0.2"
-  },
-  "dependencies": {},
-  "workspaces": [
-    "backend"
-  ]
+    "nodemon": "^3.1.11"
+  }
 }
