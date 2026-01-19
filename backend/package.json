@@ -1,20 +1,29 @@
 {
   "name": "messagerie-backend",
-  "version": "2.0.0",
-  "description": "Backend optimisé pour MessagerieApp avec expiration d'images",
+  "version": "3.0.0",
+  "description": "Backend optimisé avec système de profils étendus et validation admin",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "db:init": "psql -U postgres -d messagerie_db -f database/init.sql",
+    "db:init": "psql -U postgres -f database/init.sql",
     "db:seed": "psql -U postgres -d messagerie_db -f database/seed.sql",
-    "db:reset": "npm run db:init && npm run db:seed",
+    "db:migrate": "psql -U postgres -d messagerie_db -f database/migration_profiles.sql",
+    "db:reset": "npm run db:init && npm run db:migrate && npm run db:seed",
     "test": "jest --coverage",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.js\""
   },
-  "keywords": ["messaging", "express", "postgresql", "socket.io", "jwt"],
-  "author": "Votre Nom",
+  "keywords": [
+    "messaging",
+    "express",
+    "postgresql",
+    "socket.io",
+    "jwt",
+    "profiles",
+    "admin-panel"
+  ],
+  "author": "MessagerieApp Team",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

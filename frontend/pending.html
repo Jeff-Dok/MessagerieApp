@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil en attente - MessagerieApp</title>
+    
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+    
+    <style>
+        .pending-container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .pending-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto var(--spacing-6);
+            background: linear-gradient(135deg, var(--color-warning-light) 0%, var(--color-warning) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        .pending-icon svg {
+            width: 60px;
+            height: 60px;
+            color: var(--color-warning);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pending-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-3);
+        }
+        
+        .pending-message {
+            font-size: var(--text-lg);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-6);
+            line-height: var(--leading-relaxed);
+        }
+        
+        .info-box {
+            background-color: var(--color-info-light);
+            border-left: 4px solid var(--color-info);
+            padding: var(--spacing-4);
+            border-radius: var(--border-radius-lg);
+            text-align: left;
+            margin: var(--spacing-6) 0;
+        }
+        
+        .info-box h3 {
+            font-weight: var(--font-semibold);
+            color: var(--color-info);
+            margin-bottom: var(--spacing-2);
+        }
+        
+        .info-box ul {
+            list-style: disc;
+            padding-left: var(--spacing-5);
+            color: var(--text-secondary);
+        }
+        
+        .info-box li {
+            margin-bottom: var(--spacing-2);
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="pending-container">
+                <!-- Icône d'attente -->
+                <div class="pending-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                
+                <!-- Titre -->
+                <h1 class="pending-title">Profil en attente de validation</h1>
+                
+                <!-- Message -->
+                <p class="pending-message">
+                    Merci pour votre inscription ! Votre profil est actuellement en cours de révision par notre équipe.
+                </p>
+                
+                <!-- Informations -->
+                <div class="info-box">
+                    <h3>Que se passe-t-il maintenant ?</h3>
+                    <ul>
+                        <li>Un administrateur va examiner votre profil</li>
+                        <li>Vous recevrez un email dès que votre profil sera validé</li>
+                        <li>La validation prend généralement entre 24 et 48 heures</li>
+                        <li>Une fois approuvé, vous pourrez vous connecter et utiliser l'application</li>
+                    </ul>
+                </div>
+                
+                <!-- Actions -->
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-3); margin-top: var(--spacing-6);">
+                    <button onclick="checkStatus()" class="btn btn-primary btn-block">
+                        <span class="btn-text">Vérifier le statut</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+                    <a href="login.html" class="btn btn-secondary btn-block">
+                        Retour à la connexion
+                    </a>
+                </div>
+                
+                <!-- Email de contact -->
+                <p style="margin-top: var(--spacing-6); font-size: var(--text-sm); color: var(--text-tertiary);">
+                    Des questions ? Contactez-nous à 
+                    <a href="mailto:support@messagerie-app.com" style="color: var(--color-primary);">
+                        support@messagerie-app.com
+                    </a>
+                </p>
+            </div>
+            
+            <!-- Zone de messages -->
+            <div id="messageZone" role="alert" aria-live="polite" class="hidden">
+                <div id="errorMessage" class="alert alert-error hidden"></div>
+                <div id="successMessage" class="alert alert-success hidden"></div>
+                <div id="infoMessage" class="alert alert-info hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Récupérer l'email depuis le localStorage ou URL
+        const email = localStorage.getItem('pendingEmail') || new URLSearchParams(window.location.search).get('email');
+        
+        async function checkStatus() {
+            if (!email) {
+                showError('Email non trouvé. Veuillez vous reconnecter.');
+                return;
+            }
+            
+            const button = event.target.closest('button');
+            setLoading(button, true);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/check-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    switch (result.statut) {
+                        case 'approved':
+                            showSuccess('Votre profil a été approuvé ! Redirection...');
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 2000);
+                            break;
+                            
+                        case 'rejected':
+                            showError(`Votre profil a été rejeté. Raison: ${result.raisonRejet}`);
+                            break;
+                            
+                        case 'pending':
+                            showInfo('Votre profil est toujours en attente de validation.');
+                            break;
+                    }
+                } else {
+                    showError(result.message || 'Erreur lors de la vérification');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Erreur de connexion au serveur');
+            } finally {
+                setLoading(button, false);
+            }
+        }
+        
+        function setLoading(button, isLoading) {
+            const btnText = button.querySelector('.btn-text');
+            const btnLoader = button.querySelector('.btn-loader');
+            
+            button.disabled = isLoading;
+            btnText.classList.toggle('hidden', isLoading);
+            btnLoader.classList.toggle('hidden', !isLoading);
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const messageZone = document.getElementById('messageZone');
+            
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            messageZone.classList.remove('hidden');
+            
+            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            const messageZone = document.getElementById('messageZone');
+            
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            messageZone.classList.remove('hidden');
+        }
+        
+        function showInfo(message) {
+            const infoDiv = document.getElementById('infoMessage');
+            const messageZone = document.getElementById('messageZone');
+            
+            infoDiv.textContent = message;
+            infoDiv.classList.remove('hidden');
+            messageZone.classList.remove('hidden');
+            
+            setTimeout(() => infoDiv.classList.add('hidden'), 5000);
+        }
+    </script>
+</body>
+</html>

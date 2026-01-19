@@ -1,15 +1,15 @@
 /**
  * ============================================
- * VALIDATION MIDDLEWARE - Validation des données
+ * VALIDATION ÉTENDUE - Validation des profils
  * ============================================
  * 
- * Valide les données des requêtes avec express-validator
+ * Valide les données des profils utilisateurs enrichis
  * 
  * @module middleware/validation
  */
 
 const { body, param, query, validationResult } = require('express-validator');
-const { HTTP_STATUS } = require('../utils/constants');
+const { HTTP_STATUS, PSEUDO_CONFIG, BIO_CONFIG, AGE_CONFIG } = require('../utils/constants');
 
 /**
  * Middleware pour gérer les erreurs de validation
@@ -33,7 +33,7 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 /**
- * Validation pour l'inscription
+ * Validation pour l'inscription avec profil complet
  */
 const validateRegistration = [
   body('nom')
@@ -41,6 +41,20 @@ const validateRegistration = [
     .notEmpty().withMessage('Le nom est requis')
     .isLength({ min: 2, max: 100 }).withMessage('Le nom doit contenir entre 2 et 100 caractères')
     .matches(/^[a-zA-ZÀ-ÿ\s'-]+$/).withMessage('Le nom contient des caractères invalides'),
+  
+  body('pseudo')
+    .trim()
+    .notEmpty().withMessage('Le pseudo est requis')
+    .isLength({ min: PSEUDO_CONFIG.MIN_LENGTH, max: PSEUDO_CONFIG.MAX_LENGTH })
+    .withMessage(`Le pseudo doit contenir entre ${PSEUDO_CONFIG.MIN_LENGTH} et ${PSEUDO_CONFIG.MAX_LENGTH} caractères`)
+    .matches(PSEUDO_CONFIG.PATTERN)
+    .withMessage('Le pseudo ne peut contenir que des lettres, chiffres, _ et -')
+    .custom((value) => {
+      if (PSEUDO_CONFIG.RESERVED.includes(value.toLowerCase())) {
+        throw new Error('Ce pseudo est réservé');
+      }
+      return true;
+    }),
   
   body('email')
     .trim()
@@ -51,6 +65,45 @@ const validateRegistration = [
   body('password')
     .notEmpty().withMessage('Le mot de passe est requis')
     .isLength({ min: 6 }).withMessage('Le mot de passe doit contenir au moins 6 caractères'),
+  
+  body('dateNaissance')
+    .notEmpty().withMessage('La date de naissance est requise')
+    .isISO8601().withMessage('Format de date invalide')
+    .custom((value) => {
+      const birthDate = new Date(value);
+      const today = new Date();
+      
+      // Vérifier que la date est dans le passé
+      if (birthDate >= today) {
+        throw new Error('La date de naissance doit être dans le passé');
+      }
+      
+      // Calculer l'âge
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      // Vérifier l'âge minimum
+      if (age < AGE_CONFIG.MINIMUM) {
+        throw new Error(`Vous devez avoir au moins ${AGE_CONFIG.MINIMUM} ans pour vous inscrire`);
+      }
+      
+      return true;
+    }),
+  
+  body('ville')
+    .trim()
+    .notEmpty().withMessage('La ville est requise')
+    .isLength({ min: 2, max: 100 }).withMessage('La ville doit contenir entre 2 et 100 caractères'),
+  
+  body('bio')
+    .optional()
+    .trim()
+    .isLength({ max: BIO_CONFIG.MAX_LENGTH })
+    .withMessage(`La bio ne peut pas dépasser ${BIO_CONFIG.MAX_LENGTH} caractères`),
   
   handleValidationErrors
 ];
@@ -72,7 +125,53 @@ const validateLogin = [
 ];
 
 /**
- * Validation pour la mise à jour d'utilisateur
+ * Validation pour la vérification du statut
+ */
+const validateCheckStatus = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('L\'email est requis')
+    .isEmail().withMessage('Format d\'email invalide')
+    .normalizeEmail(),
+  
+  handleValidationErrors
+];
+
+/**
+ * Validation pour le rejet de profil
+ */
+const validateRejectProfile = [
+  param('id')
+    .isInt({ min: 1 }).withMessage('ID invalide')
+    .toInt(),
+  
+  body('raison')
+    .trim()
+    .notEmpty().withMessage('Une raison est requise pour le rejet')
+    .isLength({ min: 10, max: 500 })
+    .withMessage('La raison doit contenir entre 10 et 500 caractères'),
+  
+  handleValidationErrors
+];
+
+/**
+ * Validation pour l'approbation en masse
+ */
+const validateApproveBulk = [
+  body('userIds')
+    .isArray({ min: 1 }).withMessage('Liste d\'IDs requise')
+    .custom((value) => {
+      if (!value.every(id => Number.isInteger(id) && id > 0)) {
+        throw new Error('Tous les IDs doivent être des entiers positifs');
+      }
+      return true;
+    }),
+  
+  handleValidationErrors
+];
+
+/**
+ * Validation pour la mise à jour du profil
  */
 const validateUserUpdate = [
   body('nom')
@@ -80,11 +179,16 @@ const validateUserUpdate = [
     .trim()
     .isLength({ min: 2, max: 100 }).withMessage('Le nom doit contenir entre 2 et 100 caractères'),
   
-  body('email')
+  body('ville')
     .optional()
     .trim()
-    .isEmail().withMessage('Format d\'email invalide')
-    .normalizeEmail(),
+    .isLength({ min: 2, max: 100 }).withMessage('La ville doit contenir entre 2 et 100 caractères'),
+  
+  body('bio')
+    .optional()
+    .trim()
+    .isLength({ max: BIO_CONFIG.MAX_LENGTH })
+    .withMessage(`La bio ne peut pas dépasser ${BIO_CONFIG.MAX_LENGTH} caractères`),
   
   handleValidationErrors
 ];
@@ -134,12 +238,36 @@ const validatePagination = [
   handleValidationErrors
 ];
 
+/**
+ * Validation pour la recherche admin
+ */
+const validateAdminSearch = [
+  query('query')
+    .optional()
+    .trim()
+    .isLength({ min: 2 }).withMessage('La requête doit contenir au moins 2 caractères'),
+  
+  query('statut')
+    .optional()
+    .isIn(['pending', 'approved', 'rejected']).withMessage('Statut invalide'),
+  
+  query('ville')
+    .optional()
+    .trim(),
+  
+  ...validatePagination
+];
+
 module.exports = {
   validateRegistration,
   validateLogin,
+  validateCheckStatus,
+  validateRejectProfile,
+  validateApproveBulk,
   validateUserUpdate,
   validateMessage,
   validateId,
   validatePagination,
+  validateAdminSearch,
   handleValidationErrors
 };

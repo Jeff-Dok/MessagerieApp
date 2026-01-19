@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <!-- Meta tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -19,57 +18,179 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+    
+    <style>
+        .form-step {
+            display: none;
+        }
+        
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-2);
+            margin-bottom: var(--spacing-6);
+        }
+        
+        .step {
+            width: 40px;
+            height: 4px;
+            background-color: var(--gray-300);
+            border-radius: var(--border-radius-full);
+            transition: all var(--transition-base);
+        }
+        
+        .step.active {
+            background-color: var(--color-primary);
+        }
+        
+        .step.completed {
+            background-color: var(--color-success);
+        }
+        
+        .photo-preview-container {
+            text-align: center;
+            margin: var(--spacing-4) 0;
+        }
+        
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--color-primary-light);
+            margin: 0 auto;
+            display: none;
+        }
+        
+        .photo-preview.show {
+            display: block;
+        }
+        
+        .photo-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-3);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .photo-placeholder:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .photo-placeholder svg {
+            width: 60px;
+            height: 60px;
+            color: var(--gray-500);
+        }
+        
+        .char-counter {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            text-align: right;
+            margin-top: var(--spacing-1);
+        }
+        
+        .char-counter.warning {
+            color: var(--color-warning);
+        }
+        
+        .char-counter.error {
+            color: var(--color-error);
+        }
+    </style>
 </head>
 <body class="auth-page">
-    <!-- Conteneur principal -->
     <main class="auth-container" role="main">
-        <!-- Carte d'authentification -->
         <div class="auth-card">
             <!-- En-tête -->
             <header class="auth-header">
                 <img src="images/logo.svg" alt="Logo MessagerieApp" class="logo" width="60" height="60">
-                <h1 class="auth-title">MessagerieApp</h1>
-                <p class="auth-subtitle">Créez votre compte gratuitement</p>
+                <h1 class="auth-title">Créer votre profil</h1>
+                <p class="auth-subtitle">Inscription en 3 étapes simples</p>
             </header>
+
+            <!-- Indicateur d'étapes -->
+            <div class="step-indicator" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="3">
+                <div class="step active" data-step="1"></div>
+                <div class="step" data-step="2"></div>
+                <div class="step" data-step="3"></div>
+            </div>
 
             <!-- Navigation -->
             <nav class="auth-nav" role="navigation" aria-label="Navigation authentification">
-                <a href="login.html" class="auth-tab">
-                    Connexion
-                </a>
-                <button class="auth-tab active" aria-current="page">
-                    Inscription
-                </button>
+                <a href="login.html" class="auth-tab">Connexion</a>
+                <button class="auth-tab active" aria-current="page">Inscription</button>
             </nav>
 
-            <!-- Formulaire d'inscription -->
-            <section class="auth-form-section">
-                <div class="auth-form">
-                    <!-- Champ Nom -->
+            <!-- Formulaire multi-étapes -->
+            <form id="registerForm" class="auth-form-section" novalidate>
+                
+                <!-- ÉTAPE 1: Informations de base -->
+                <div class="form-step active" data-step="1">
+                    <h2 class="text-lg font-semibold mb-4">Informations de base</h2>
+                    
+                    <!-- Nom -->
                     <div class="form-group">
                         <label for="registerName" class="form-label">
                             <span class="label-text">Nom complet</span>
-                            <span class="label-required" aria-label="requis">*</span>
+                            <span class="label-required">*</span>
                         </label>
                         <input 
                             type="text" 
                             id="registerName" 
-                            name="name"
+                            name="nom"
                             class="form-input" 
                             placeholder="Jean Dupont"
-                            autocomplete="name"
                             required
-                            aria-required="true"
                             minlength="2"
                             maxlength="100"
                         >
                     </div>
 
-                    <!-- Champ Email -->
+                    <!-- Pseudo -->
+                    <div class="form-group">
+                        <label for="registerPseudo" class="form-label">
+                            <span class="label-text">Pseudo</span>
+                            <span class="label-required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="registerPseudo" 
+                            name="pseudo"
+                            class="form-input" 
+                            placeholder="jean_dupont"
+                            required
+                            minlength="3"
+                            maxlength="50"
+                            pattern="[a-zA-Z0-9_-]+"
+                        >
+                        <small class="form-help">
+                            3-50 caractères, lettres, chiffres, _ et - seulement
+                        </small>
+                    </div>
+
+                    <!-- Email -->
                     <div class="form-group">
                         <label for="registerEmail" class="form-label">
                             <span class="label-text">Email</span>
-                            <span class="label-required" aria-label="requis">*</span>
+                            <span class="label-required">*</span>
                         </label>
                         <input 
                             type="email" 
@@ -77,17 +198,15 @@
                             name="email"
                             class="form-input" 
                             placeholder="votre@email.com"
-                            autocomplete="email"
                             required
-                            aria-required="true"
                         >
                     </div>
 
-                    <!-- Champ Mot de passe -->
+                    <!-- Mot de passe -->
                     <div class="form-group">
                         <label for="registerPassword" class="form-label">
                             <span class="label-text">Mot de passe</span>
-                            <span class="label-required" aria-label="requis">*</span>
+                            <span class="label-required">*</span>
                         </label>
                         <input 
                             type="password" 
@@ -95,35 +214,119 @@
                             name="password"
                             class="form-input" 
                             placeholder="••••••••"
-                            autocomplete="new-password"
                             required
-                            aria-required="true"
                             minlength="6"
-                            aria-describedby="passwordRequirements"
                         >
-                        <small id="passwordRequirements" class="form-help">
-                            Minimum 6 caractères
-                        </small>
+                        <small class="form-help">Minimum 6 caractères</small>
                     </div>
 
-                    <!-- Bouton d'inscription -->
-                    <button 
-                        type="button" 
-                        id="registerButton" 
-                        class="btn btn-primary btn-block"
-                        aria-label="S'inscrire"
-                    >
-                        <span class="btn-text">S'inscrire</span>
-                        <span class="btn-loader hidden" aria-hidden="true"></span>
+                    <button type="button" class="btn btn-primary btn-block" onclick="nextStep()">
+                        Continuer
                     </button>
-
-                    <!-- Lien vers connexion -->
-                    <p class="auth-link">
-                        Vous avez déjà un compte ? 
-                        <a href="login.html">Se connecter</a>
-                    </p>
                 </div>
-            </section>
+
+                <!-- ÉTAPE 2: Informations personnelles -->
+                <div class="form-step" data-step="2">
+                    <h2 class="text-lg font-semibold mb-4">Informations personnelles</h2>
+                    
+                    <!-- Date de naissance -->
+                    <div class="form-group">
+                        <label for="registerBirthdate" class="form-label">
+                            <span class="label-text">Date de naissance</span>
+                            <span class="label-required">*</span>
+                        </label>
+                        <input 
+                            type="date" 
+                            id="registerBirthdate" 
+                            name="dateNaissance"
+                            class="form-input" 
+                            required
+                            max=""
+                        >
+                        <small class="form-help">Vous devez avoir au moins 13 ans</small>
+                    </div>
+
+                    <!-- Ville -->
+                    <div class="form-group">
+                        <label for="registerCity" class="form-label">
+                            <span class="label-text">Ville de résidence</span>
+                            <span class="label-required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="registerCity" 
+                            name="ville"
+                            class="form-input" 
+                            placeholder="Montréal"
+                            required
+                            minlength="2"
+                            maxlength="100"
+                        >
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="form-group">
+                        <label for="registerBio" class="form-label">
+                            <span class="label-text">Brève description</span>
+                        </label>
+                        <textarea 
+                            id="registerBio" 
+                            name="bio"
+                            class="form-input" 
+                            placeholder="Parlez-nous un peu de vous..."
+                            rows="4"
+                            maxlength="500"
+                        ></textarea>
+                        <div id="bioCounter" class="char-counter">0 / 500 caractères</div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--spacing-3);">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()" style="flex: 1;">
+                            Retour
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()" style="flex: 1;">
+                            Continuer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ÉTAPE 3: Photo de profil -->
+                <div class="form-step" data-step="3">
+                    <h2 class="text-lg font-semibold mb-4">Photo de profil</h2>
+                    
+                    <div class="photo-preview-container">
+                        <div class="photo-placeholder" onclick="document.getElementById('photoInput').click()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <img id="photoPreview" class="photo-preview" alt="Aperçu photo">
+                        <input 
+                            type="file" 
+                            id="photoInput" 
+                            name="photoProfil"
+                            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                            style="display: none;"
+                            onchange="previewPhoto(this)"
+                        >
+                        <p class="text-sm text-secondary" style="margin-top: var(--spacing-2);">
+                            Cliquez pour choisir une photo (max 5 MB)
+                        </p>
+                        <small class="form-help">Formats acceptés: JPG, PNG, GIF, WebP</small>
+                    </div>
+
+                    <div style="display: flex; gap: var(--spacing-3); margin-top: var(--spacing-6);">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()" style="flex: 1;">
+                            Retour
+                        </button>
+                        <button type="submit" id="submitButton" class="btn btn-primary" style="flex: 1;">
+                            <span class="btn-text">S'inscrire</span>
+                            <span class="btn-loader hidden"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
 
             <!-- Zone de messages -->
             <div id="messageZone" role="alert" aria-live="polite" class="hidden">
@@ -136,115 +339,240 @@
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/utils/validation.js"></script>
     <script>
-        /**
-         * Initialisation de la page d'inscription
-         */
-        document.addEventListener('DOMContentLoaded', () => {
-            const registerButton = document.getElementById('registerButton');
-            const nameInput = document.getElementById('registerName');
-            const emailInput = document.getElementById('registerEmail');
-            const passwordInput = document.getElementById('registerPassword');
+        let currentStep = 1;
+        const totalSteps = 3;
 
-            /**
-             * Gère la soumission du formulaire d'inscription
-             */
-            async function handleRegister() {
-                const name = nameInput.value.trim();
-                const email = emailInput.value.trim();
-                const password = passwordInput.value;
+        // Définir la date max (13 ans minimum)
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+        document.getElementById('registerBirthdate').max = maxDate.toISOString().split('T')[0];
 
-                // Validation
-                if (!name || !email || !password) {
-                    showError('Veuillez remplir tous les champs');
-                    return;
-                }
-
-                if (name.length < 2) {
-                    showError('Le nom doit contenir au moins 2 caractères');
-                    return;
-                }
-
-                if (!isValidEmail(email)) {
-                    showError('Format d\'email invalide');
-                    return;
-                }
-
-                if (password.length < 6) {
-                    showError('Le mot de passe doit contenir au moins 6 caractères');
-                    return;
-                }
-
-                // Chargement
-                setLoading(true);
-
-                try {
-                    const result = await Auth.register(name, email, password);
-                    
-                    if (result.success) {
-                        showSuccess('Inscription réussie ! Redirection...');
-                        setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 500);
-                    } else {
-                        showError(result.message || 'Erreur d\'inscription');
-                        setLoading(false);
-                    }
-                } catch (error) {
-                    showError('Erreur de connexion au serveur');
-                    setLoading(false);
-                }
-            }
-
-            function setLoading(isLoading) {
-                const btnText = registerButton.querySelector('.btn-text');
-                const btnLoader = registerButton.querySelector('.btn-loader');
-                
-                registerButton.disabled = isLoading;
-                btnText.classList.toggle('hidden', isLoading);
-                btnLoader.classList.toggle('hidden', !isLoading);
-            }
-
-            function showError(message) {
-                const errorDiv = document.getElementById('errorMessage');
-                const messageZone = document.getElementById('messageZone');
-                
-                errorDiv.textContent = message;
-                errorDiv.classList.remove('hidden');
-                messageZone.classList.remove('hidden');
-                
-                setTimeout(() => {
-                    errorDiv.classList.add('hidden');
-                }, 5000);
-            }
-
-            function showSuccess(message) {
-                const successDiv = document.getElementById('successMessage');
-                const messageZone = document.getElementById('messageZone');
-                
-                successDiv.textContent = message;
-                successDiv.classList.remove('hidden');
-                messageZone.classList.remove('hidden');
-            }
-
-            function isValidEmail(email) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return emailRegex.test(email);
-            }
-
-            // Event listeners
-            registerButton.addEventListener('click', handleRegister);
+        // Compteur de caractères pour la bio
+        const bioInput = document.getElementById('registerBio');
+        const bioCounter = document.getElementById('bioCounter');
+        
+        bioInput.addEventListener('input', () => {
+            const length = bioInput.value.length;
+            bioCounter.textContent = `${length} / 500 caractères`;
             
-            passwordInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    handleRegister();
+            bioCounter.classList.remove('warning', 'error');
+            if (length > 450) bioCounter.classList.add('warning');
+            if (length >= 500) bioCounter.classList.add('error');
+        });
+
+        // Navigation entre étapes
+        function nextStep() {
+            if (!validateCurrentStep()) return;
+            
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateSteps();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateSteps();
+            }
+        }
+
+        function updateSteps() {
+            // Masquer toutes les étapes
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Afficher l'étape actuelle
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+            
+            // Mettre à jour l'indicateur
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
                 }
             });
+            
+            // Scroll en haut
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-            nameInput.focus();
+        // Validation de l'étape actuelle
+        function validateCurrentStep() {
+            const currentStepEl = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+            const inputs = currentStepEl.querySelectorAll('input[required], textarea[required]');
+            
+            for (let input of inputs) {
+                if (!input.value.trim()) {
+                    showError(`Le champ "${input.placeholder || input.name}" est requis`);
+                    input.focus();
+                    return false;
+                }
+                
+                // Validation spécifique
+                if (input.type === 'email' && !isValidEmail(input.value)) {
+                    showError('Format d\'email invalide');
+                    input.focus();
+                    return false;
+                }
+                
+                if (input.name === 'password' && input.value.length < 6) {
+                    showError('Le mot de passe doit contenir au moins 6 caractères');
+                    input.focus();
+                    return false;
+                }
+                
+                if (input.name === 'pseudo' && !/^[a-zA-Z0-9_-]+$/.test(input.value)) {
+                    showError('Le pseudo ne peut contenir que des lettres, chiffres, _ et -');
+                    input.focus();
+                    return false;
+                }
+                
+                if (input.type === 'date') {
+                    const birthDate = new Date(input.value);
+                    const age = calculateAge(birthDate);
+                    if (age < 13) {
+                        showError('Vous devez avoir au moins 13 ans pour vous inscrire');
+                        input.focus();
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        // Calcul de l'âge
+        function calculateAge(birthDate) {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        // Prévisualisation de la photo
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Vérifier la taille
+                if (file.size > 5 * 1024 * 1024) {
+                    showError('La photo ne peut pas dépasser 5 MB');
+                    input.value = '';
+                    return;
+                }
+                
+                // Vérifier le type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    showError('Format de photo invalide. Utilisez JPG, PNG, GIF ou WebP');
+                    input.value = '';
+                    return;
+                }
+                
+                // Afficher l'aperçu
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photoPreview');
+                    preview.src = e.target.result;
+                    preview.classList.add('show');
+                    document.querySelector('.photo-placeholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Soumission du formulaire
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateCurrentStep()) return;
+            
+            setLoading(true);
+            
+            try {
+                const formData = new FormData();
+                formData.append('nom', document.getElementById('registerName').value.trim());
+                formData.append('pseudo', document.getElementById('registerPseudo').value.trim());
+                formData.append('email', document.getElementById('registerEmail').value.trim());
+                formData.append('password', document.getElementById('registerPassword').value);
+                formData.append('dateNaissance', document.getElementById('registerBirthdate').value);
+                formData.append('ville', document.getElementById('registerCity').value.trim());
+                formData.append('bio', document.getElementById('registerBio').value.trim());
+                
+                // Ajouter la photo si présente
+                const photoInput = document.getElementById('photoInput');
+                if (photoInput.files[0]) {
+                    formData.append('photoProfil', photoInput.files[0]);
+                }
+                
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('Inscription réussie ! Votre profil est en attente de validation.');
+                    setTimeout(() => {
+                        window.location.href = 'pending.html';
+                    }, 2000);
+                } else {
+                    showError(result.message || 'Erreur lors de l\'inscription');
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Erreur de connexion au serveur');
+                setLoading(false);
+            }
         });
+
+        function setLoading(isLoading) {
+            const button = document.getElementById('submitButton');
+            const btnText = button.querySelector('.btn-text');
+            const btnLoader = button.querySelector('.btn-loader');
+            
+            button.disabled = isLoading;
+            btnText.classList.toggle('hidden', isLoading);
+            btnLoader.classList.toggle('hidden', !isLoading);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const messageZone = document.getElementById('messageZone');
+            
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            messageZone.classList.remove('hidden');
+            
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            const messageZone = document.getElementById('messageZone');
+            
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            messageZone.classList.remove('hidden');
+        }
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
     </script>
 </body>
 </html>

@@ -1,66 +1,99 @@
 /**
  * ============================================
- * AUTH CONTROLLER - Contrôleur d'authentification
+ * AUTH CONTROLLER ÉTENDU - Authentification avec profils
  * ============================================
  * 
- * Gère l'inscription, la connexion et la vérification des tokens
+ * Gère l'inscription avec profil complet et validation
  * 
  * @module controllers/authController
+ * @version 3.0.0
  */
 
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const jwtConfig = require('../config/jwt');
-const { HTTP_STATUS, SERVER_MESSAGES } = require('../utils/constants');
+const { HTTP_STATUS, SERVER_MESSAGES, USER_STATUS } = require('../utils/constants');
 const logger = require('../utils/logger');
+const ProfilePhotoService = require('../services/profilePhotoService');
 
 /**
- * Contrôleur d'authentification
+ * Contrôleur d'authentification étendu
  */
 class AuthController {
   /**
-   * Inscription d'un nouveau utilisateur
+   * Inscription d'un nouveau utilisateur avec profil complet
    * @route POST /api/auth/register
    */
   static async register(req, res, next) {
     try {
-      const { nom, email, password } = req.body;
+      const { 
+        nom, 
+        pseudo, 
+        email, 
+        password, 
+        dateNaissance, 
+        ville, 
+        bio 
+      } = req.body;
 
       // Vérifier si l'email existe déjà
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
+      const existingEmail = await User.findByEmail(email);
+      if (existingEmail) {
         return res.status(HTTP_STATUS.CONFLICT).json({
           success: false,
           message: SERVER_MESSAGES.AUTH.EMAIL_EXISTS
         });
       }
 
-      // Créer l'utilisateur
+      // Vérifier si le pseudo existe déjà
+      const existingPseudo = await User.findByPseudo(pseudo);
+      if (existingPseudo) {
+        return res.status(HTTP_STATUS.CONFLICT).json({
+          success: false,
+          message: SERVER_MESSAGES.AUTH.PSEUDO_EXISTS
+        });
+      }
+
+      // Traiter la photo de profil si présente
+      let photoProfil = null;
+      let photoMimeType = null;
+
+      if (req.file) {
+        const photoResult = await ProfilePhotoService.processProfilePhoto(req.file.buffer);
+        photoProfil = photoResult.dataUrl;
+        photoMimeType = 'image/jpeg';
+      }
+
+      // Créer l'utilisateur avec statut "pending"
       const user = await User.create({
         nom,
+        pseudo,
         email,
         password,
-        role: 'user'
+        dateNaissance,
+        ville,
+        bio: bio || '',
+        photoProfil,
+        photoMimeType,
+        role: 'user',
+        statut: USER_STATUS.PENDING
       });
 
-      // Générer le token JWT
-      const token = jwt.sign(
-        { 
-          userId: user.id, 
-          email: user.email, 
-          role: user.role 
-        },
-        jwtConfig.secret,
-        { expiresIn: jwtConfig.expiresIn }
-      );
+      logger.success(`Nouvel utilisateur inscrit (en attente): ${email}`);
 
-      logger.success(`Nouvel utilisateur enregistré: ${email}`);
+      // Ne pas générer de token car le profil doit être validé
+      // L'utilisateur recevra un message l'informant de l'attente
 
       res.status(HTTP_STATUS.CREATED).json({
         success: true,
         message: SERVER_MESSAGES.AUTH.REGISTER_SUCCESS,
-        token,
-        user: user.toPublicJSON()
+        user: {
+          id: user.id,
+          pseudo: user.pseudo,
+          email: user.email,
+          statut: user.statut
+        },
+        needsApproval: true
       });
 
     } catch (error) {
@@ -95,12 +128,31 @@ class AuthController {
         });
       }
 
+      // Vérifier le statut du profil
+      if (user.statut === USER_STATUS.PENDING) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          message: SERVER_MESSAGES.AUTH.ACCOUNT_PENDING,
+          statut: USER_STATUS.PENDING
+        });
+      }
+
+      if (user.statut === USER_STATUS.REJECTED) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          message: SERVER_MESSAGES.AUTH.ACCOUNT_REJECTED,
+          statut: USER_STATUS.REJECTED,
+          raison: user.raisonRejet
+        });
+      }
+
       // Générer le token JWT
       const token = jwt.sign(
         { 
           userId: user.id, 
           email: user.email, 
-          role: user.role 
+          role: user.role,
+          statut: user.statut
         },
         jwtConfig.secret,
         { expiresIn: jwtConfig.expiresIn }
@@ -136,6 +188,15 @@ class AuthController {
         });
       }
 
+      // Vérifier que le profil est toujours approuvé
+      if (!user.isApproved()) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          message: SERVER_MESSAGES.AUTH.PROFILE_NOT_APPROVED,
+          statut: user.statut
+        });
+      }
+
       res.json({
         success: true,
         user: user.toPublicJSON()
@@ -148,7 +209,7 @@ class AuthController {
   }
 
   /**
-   * Rafraîchissement du token JWT (optionnel)
+   * Rafraîchissement du token JWT
    * @route POST /api/auth/refresh
    */
   static async refreshToken(req, res, next) {
@@ -162,12 +223,21 @@ class AuthController {
         });
       }
 
+      // Vérifier que le profil est approuvé
+      if (!user.isApproved()) {
+        return res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          message: SERVER_MESSAGES.AUTH.PROFILE_NOT_APPROVED
+        });
+      }
+
       // Générer un nouveau token
       const token = jwt.sign(
         { 
           userId: user.id, 
           email: user.email, 
-          role: user.role 
+          role: user.role,
+          statut: user.statut
         },
         jwtConfig.secret,
         { expiresIn: jwtConfig.expiresIn }
@@ -181,6 +251,38 @@ class AuthController {
 
     } catch (error) {
       logger.error('Erreur lors du rafraîchissement du token:', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Vérification du statut d'un profil
+   * @route POST /api/auth/check-status
+   */
+  static async checkStatus(req, res, next) {
+    try {
+      const { email } = req.body;
+
+      const user = await User.findByEmail(email);
+      
+      if (!user) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: SERVER_MESSAGES.USER.NOT_FOUND
+        });
+      }
+
+      res.json({
+        success: true,
+        statut: user.statut,
+        pseudo: user.pseudo,
+        email: user.email,
+        dateValidation: user.dateValidation,
+        raisonRejet: user.statut === USER_STATUS.REJECTED ? user.raisonRejet : null
+      });
+
+    } catch (error) {
+      logger.error('Erreur lors de la vérification du statut:', error);
       next(error);
     }
   }
