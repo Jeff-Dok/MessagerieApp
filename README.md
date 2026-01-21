@@ -8,7 +8,7 @@ messagerie-app/
 │
 ├── 📄 README.md                          # Documentation principale
 ├── 📄 README_PROFILS.md                  # Documentation profils étendus
-├── 📄 quick_start_guide.md               # Guide de démarrage rapide
+├── 📄 installation_test_guide.md         # Guide d'installation et de test
 ├── 📄 package.json                       # Configuration npm racine
 ├── 📄 .gitignore                         # Fichiers à ignorer
 │
@@ -135,7 +135,7 @@ messagerie-app/
 - **Composants UI** : 3 (MessageRenderer, ConversationList, Notifications)
 
 ### Documentation
-- **Guides** : 3 (README, README_PROFILS, Quick Start)
+- **Guides** : 3 (README, README_PROFILS, installation_test_guide)
 - **API Docs** : 1 (API.md - complète)
 - **Guide utilisateur** : 1 (GUIDE.md)
 
@@ -194,7 +194,7 @@ Documentation
 README.md - Documentation principale
 README_PROFILS.md - Documentation profils étendus
 docs/API.md - Référence API complète
-quick_start_guide.md - Installation rapide
+installation_test_guide.md - Installation rapide
 
 
 🎯 Points d'Entrée
