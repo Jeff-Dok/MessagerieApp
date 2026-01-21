@@ -2,21 +2,21 @@
  * ============================================
  * LOGGER - Système de journalisation
  * ============================================
- * 
+ *
  * Utilitaire pour logger les messages avec différents niveaux
- * 
+ *
  * @module utils/logger
  */
 
 const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m'
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
 };
 
 /**
@@ -39,8 +39,8 @@ const logger = {
    */
   info: (message, ...args) => {
     console.log(
-      `${colors.blue}ℹ ${formatMessage('INFO', message)}${colors.reset}`,
-      ...args
+      `${colors.blue}ℹ ${formatMessage("INFO", message)}${colors.reset}`,
+      ...args,
     );
   },
 
@@ -49,8 +49,8 @@ const logger = {
    */
   success: (message, ...args) => {
     console.log(
-      `${colors.green}✓ ${formatMessage('SUCCESS', message)}${colors.reset}`,
-      ...args
+      `${colors.green}✓ ${formatMessage("SUCCESS", message)}${colors.reset}`,
+      ...args,
     );
   },
 
@@ -59,8 +59,8 @@ const logger = {
    */
   warn: (message, ...args) => {
     console.warn(
-      `${colors.yellow}⚠ ${formatMessage('WARN', message)}${colors.reset}`,
-      ...args
+      `${colors.yellow}⚠ ${formatMessage("WARN", message)}${colors.reset}`,
+      ...args,
     );
   },
 
@@ -69,8 +69,8 @@ const logger = {
    */
   error: (message, ...args) => {
     console.error(
-      `${colors.red}✖ ${formatMessage('ERROR', message)}${colors.reset}`,
-      ...args
+      `${colors.red}✖ ${formatMessage("ERROR", message)}${colors.reset}`,
+      ...args,
     );
   },
 
@@ -78,13 +78,13 @@ const logger = {
    * Log de débogage
    */
   debug: (message, ...args) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(
-        `${colors.magenta}⚙ ${formatMessage('DEBUG', message)}${colors.reset}`,
-        ...args
+        `${colors.magenta}⚙ ${formatMessage("DEBUG", message)}${colors.reset}`,
+        ...args,
       );
     }
-  }
+  },
 };
 
 module.exports = logger;

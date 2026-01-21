@@ -2,19 +2,23 @@
  * ============================================
  * AUTH CONTROLLER ÉTENDU - Authentification avec profils
  * ============================================
- * 
+ *
  * Gère l'inscription avec profil complet et validation
- * 
+ *
  * @module controllers/authController
  * @version 3.0.0
  */
 
-const jwt = require('jsonwebtoken');
-const { User } = require('../models');
-const jwtConfig = require('../config/jwt');
-const { HTTP_STATUS, SERVER_MESSAGES, USER_STATUS } = require('../utils/constants');
-const logger = require('../utils/logger');
-const ProfilePhotoService = require('../services/profilePhotoService');
+const jwt = require("jsonwebtoken");
+const { User } = require("../models");
+const jwtConfig = require("../config/jwt");
+const {
+  HTTP_STATUS,
+  SERVER_MESSAGES,
+  USER_STATUS,
+} = require("../utils/constants");
+const logger = require("../utils/logger");
+const ProfilePhotoService = require("../services/profilePhotoService");
 
 /**
  * Contrôleur d'authentification étendu
@@ -26,22 +30,15 @@ class AuthController {
    */
   static async register(req, res, next) {
     try {
-      const { 
-        nom, 
-        pseudo, 
-        email, 
-        password, 
-        dateNaissance, 
-        ville, 
-        bio 
-      } = req.body;
+      const { nom, pseudo, email, password, dateNaissance, ville, bio } =
+        req.body;
 
       // Vérifier si l'email existe déjà
       const existingEmail = await User.findByEmail(email);
       if (existingEmail) {
         return res.status(HTTP_STATUS.CONFLICT).json({
           success: false,
-          message: SERVER_MESSAGES.AUTH.EMAIL_EXISTS
+          message: SERVER_MESSAGES.AUTH.EMAIL_EXISTS,
         });
       }
 
@@ -50,7 +47,7 @@ class AuthController {
       if (existingPseudo) {
         return res.status(HTTP_STATUS.CONFLICT).json({
           success: false,
-          message: SERVER_MESSAGES.AUTH.PSEUDO_EXISTS
+          message: SERVER_MESSAGES.AUTH.PSEUDO_EXISTS,
         });
       }
 
@@ -59,9 +56,11 @@ class AuthController {
       let photoMimeType = null;
 
       if (req.file) {
-        const photoResult = await ProfilePhotoService.processProfilePhoto(req.file.buffer);
+        const photoResult = await ProfilePhotoService.processProfilePhoto(
+          req.file.buffer,
+        );
         photoProfil = photoResult.dataUrl;
-        photoMimeType = 'image/jpeg';
+        photoMimeType = "image/jpeg";
       }
 
       // Créer l'utilisateur avec statut "pending"
@@ -72,11 +71,11 @@ class AuthController {
         password,
         dateNaissance,
         ville,
-        bio: bio || '',
+        bio: bio || "",
         photoProfil,
         photoMimeType,
-        role: 'user',
-        statut: USER_STATUS.PENDING
+        role: "user",
+        statut: USER_STATUS.PENDING,
       });
 
       logger.success(`Nouvel utilisateur inscrit (en attente): ${email}`);
@@ -91,13 +90,12 @@ class AuthController {
           id: user.id,
           pseudo: user.pseudo,
           email: user.email,
-          statut: user.statut
+          statut: user.statut,
         },
-        needsApproval: true
+        needsApproval: true,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de l\'inscription:', error);
+      logger.error("Erreur lors de l'inscription:", error);
       next(error);
     }
   }
@@ -115,7 +113,7 @@ class AuthController {
       if (!user) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          message: SERVER_MESSAGES.AUTH.LOGIN_FAILED
+          message: SERVER_MESSAGES.AUTH.LOGIN_FAILED,
         });
       }
 
@@ -124,7 +122,7 @@ class AuthController {
       if (!isPasswordValid) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
-          message: SERVER_MESSAGES.AUTH.LOGIN_FAILED
+          message: SERVER_MESSAGES.AUTH.LOGIN_FAILED,
         });
       }
 
@@ -133,7 +131,7 @@ class AuthController {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
           message: SERVER_MESSAGES.AUTH.ACCOUNT_PENDING,
-          statut: USER_STATUS.PENDING
+          statut: USER_STATUS.PENDING,
         });
       }
 
@@ -142,20 +140,20 @@ class AuthController {
           success: false,
           message: SERVER_MESSAGES.AUTH.ACCOUNT_REJECTED,
           statut: USER_STATUS.REJECTED,
-          raison: user.raisonRejet
+          raison: user.raisonRejet,
         });
       }
 
       // Générer le token JWT
       const token = jwt.sign(
-        { 
-          userId: user.id, 
-          email: user.email, 
+        {
+          userId: user.id,
+          email: user.email,
           role: user.role,
-          statut: user.statut
+          statut: user.statut,
         },
         jwtConfig.secret,
-        { expiresIn: jwtConfig.expiresIn }
+        { expiresIn: jwtConfig.expiresIn },
       );
 
       logger.info(`Utilisateur connecté: ${email}`);
@@ -164,11 +162,10 @@ class AuthController {
         success: true,
         message: SERVER_MESSAGES.AUTH.LOGIN_SUCCESS,
         token,
-        user: user.toPublicJSON()
+        user: user.toPublicJSON(),
       });
-
     } catch (error) {
-      logger.error('Erreur lors de la connexion:', error);
+      logger.error("Erreur lors de la connexion:", error);
       next(error);
     }
   }
@@ -180,11 +177,11 @@ class AuthController {
   static async verifyToken(req, res, next) {
     try {
       const user = await User.findByPk(req.user.userId);
-      
+
       if (!user) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
@@ -193,17 +190,16 @@ class AuthController {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
           message: SERVER_MESSAGES.AUTH.PROFILE_NOT_APPROVED,
-          statut: user.statut
+          statut: user.statut,
         });
       }
 
       res.json({
         success: true,
-        user: user.toPublicJSON()
+        user: user.toPublicJSON(),
       });
-
     } catch (error) {
-      logger.error('Erreur lors de la vérification du token:', error);
+      logger.error("Erreur lors de la vérification du token:", error);
       next(error);
     }
   }
@@ -215,11 +211,11 @@ class AuthController {
   static async refreshToken(req, res, next) {
     try {
       const user = await User.findByPk(req.user.userId);
-      
+
       if (!user) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
@@ -227,30 +223,29 @@ class AuthController {
       if (!user.isApproved()) {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
-          message: SERVER_MESSAGES.AUTH.PROFILE_NOT_APPROVED
+          message: SERVER_MESSAGES.AUTH.PROFILE_NOT_APPROVED,
         });
       }
 
       // Générer un nouveau token
       const token = jwt.sign(
-        { 
-          userId: user.id, 
-          email: user.email, 
+        {
+          userId: user.id,
+          email: user.email,
           role: user.role,
-          statut: user.statut
+          statut: user.statut,
         },
         jwtConfig.secret,
-        { expiresIn: jwtConfig.expiresIn }
+        { expiresIn: jwtConfig.expiresIn },
       );
 
       res.json({
         success: true,
         token,
-        user: user.toPublicJSON()
+        user: user.toPublicJSON(),
       });
-
     } catch (error) {
-      logger.error('Erreur lors du rafraîchissement du token:', error);
+      logger.error("Erreur lors du rafraîchissement du token:", error);
       next(error);
     }
   }
@@ -264,11 +259,11 @@ class AuthController {
       const { email } = req.body;
 
       const user = await User.findByEmail(email);
-      
+
       if (!user) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
@@ -278,11 +273,11 @@ class AuthController {
         pseudo: user.pseudo,
         email: user.email,
         dateValidation: user.dateValidation,
-        raisonRejet: user.statut === USER_STATUS.REJECTED ? user.raisonRejet : null
+        raisonRejet:
+          user.statut === USER_STATUS.REJECTED ? user.raisonRejet : null,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de la vérification du statut:', error);
+      logger.error("Erreur lors de la vérification du statut:", error);
       next(error);
     }
   }

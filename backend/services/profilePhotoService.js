@@ -2,15 +2,15 @@
  * ============================================
  * PROFILE PHOTO SERVICE - Traitement photos de profil
  * ============================================
- * 
+ *
  * Service dédié au traitement des photos de profil
- * 
+ *
  * @module services/profilePhotoService
  */
 
-const sharp = require('sharp');
-const { PROFILE_PHOTO_CONFIG } = require('../utils/constants');
-const logger = require('../utils/logger');
+const sharp = require("sharp");
+const { PROFILE_PHOTO_CONFIG } = require("../utils/constants");
+const logger = require("../utils/logger");
 
 /**
  * Service de gestion des photos de profil
@@ -25,7 +25,7 @@ class ProfilePhotoService {
     if (!file) {
       return {
         valid: false,
-        error: 'Aucune photo fournie'
+        error: "Aucune photo fournie",
       };
     }
 
@@ -33,7 +33,7 @@ class ProfilePhotoService {
     if (!PROFILE_PHOTO_CONFIG.ALLOWED_TYPES.includes(file.mimetype)) {
       return {
         valid: false,
-        error: `Type de fichier non autorisé. Types acceptés: ${PROFILE_PHOTO_CONFIG.ALLOWED_EXTENSIONS.join(', ')}`
+        error: `Type de fichier non autorisé. Types acceptés: ${PROFILE_PHOTO_CONFIG.ALLOWED_EXTENSIONS.join(", ")}`,
       };
     }
 
@@ -41,7 +41,7 @@ class ProfilePhotoService {
     if (file.size > PROFILE_PHOTO_CONFIG.MAX_SIZE) {
       return {
         valid: false,
-        error: `Fichier trop volumineux. Taille maximale: ${PROFILE_PHOTO_CONFIG.MAX_SIZE / 1024 / 1024}MB`
+        error: `Fichier trop volumineux. Taille maximale: ${PROFILE_PHOTO_CONFIG.MAX_SIZE / 1024 / 1024}MB`,
       };
     }
 
@@ -55,23 +55,21 @@ class ProfilePhotoService {
    */
   static async processProfilePhoto(buffer) {
     try {
-      const {
-        MAX_WIDTH,
-        MAX_HEIGHT,
-        QUALITY
-      } = PROFILE_PHOTO_CONFIG;
+      const { MAX_WIDTH, MAX_HEIGHT, QUALITY } = PROFILE_PHOTO_CONFIG;
 
       // Créer l'instance Sharp
       let image = sharp(buffer);
 
       // Obtenir les métadonnées
       const metadata = await image.metadata();
-      logger.debug(`Photo profil originale: ${metadata.width}x${metadata.height}`);
+      logger.debug(
+        `Photo profil originale: ${metadata.width}x${metadata.height}`,
+      );
 
       // Redimensionner en carré (cover)
       image = image.resize(MAX_WIDTH, MAX_HEIGHT, {
-        fit: 'cover',
-        position: 'center'
+        fit: "cover",
+        position: "center",
       });
 
       // Convertir en JPEG circulaire
@@ -87,12 +85,11 @@ class ProfilePhotoService {
       return {
         buffer: processedBuffer,
         dataUrl,
-        size: processedBuffer.length
+        size: processedBuffer.length,
       };
-
     } catch (error) {
-      logger.error('Erreur lors du traitement de la photo:', error);
-      throw new Error('Échec du traitement de la photo de profil');
+      logger.error("Erreur lors du traitement de la photo:", error);
+      throw new Error("Échec du traitement de la photo de profil");
     }
   }
 
@@ -102,7 +99,7 @@ class ProfilePhotoService {
    * @returns {string} Data URL
    */
   static bufferToDataURL(buffer) {
-    const base64 = buffer.toString('base64');
+    const base64 = buffer.toString("base64");
     return `data:image/jpeg;base64,${base64}`;
   }
 
@@ -116,14 +113,14 @@ class ProfilePhotoService {
     try {
       return await sharp(buffer)
         .resize(size, size, {
-          fit: 'cover',
-          position: 'center'
+          fit: "cover",
+          position: "center",
         })
         .jpeg({ quality: 80 })
         .toBuffer();
     } catch (error) {
-      logger.error('Erreur génération miniature:', error);
-      throw new Error('Échec de la génération de la miniature');
+      logger.error("Erreur génération miniature:", error);
+      throw new Error("Échec de la génération de la miniature");
     }
   }
 
@@ -139,11 +136,11 @@ class ProfilePhotoService {
         width: metadata.width,
         height: metadata.height,
         format: metadata.format,
-        size: buffer.length
+        size: buffer.length,
       };
     } catch (error) {
-      logger.error('Erreur lecture métadonnées:', error);
-      throw new Error('Impossible de lire les informations de la photo');
+      logger.error("Erreur lecture métadonnées:", error);
+      throw new Error("Impossible de lire les informations de la photo");
     }
   }
 }

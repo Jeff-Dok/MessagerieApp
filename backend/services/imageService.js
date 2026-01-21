@@ -2,21 +2,21 @@
  * ============================================
  * IMAGE SERVICE - Traitement des images
  * ============================================
- * 
+ *
  * Service dédié au traitement et à la gestion des images
- * 
+ *
  * Fonctionnalités:
  * - Validation des images
  * - Redimensionnement et optimisation
  * - Conversion en Base64
  * - Ajout de filigrane
- * 
+ *
  * @module services/imageService
  */
 
-const sharp = require('sharp');
-const { IMAGE_CONFIG } = require('../utils/constants');
-const logger = require('../utils/logger');
+const sharp = require("sharp");
+const { IMAGE_CONFIG } = require("../utils/constants");
+const logger = require("../utils/logger");
 
 /**
  * Service de gestion des images
@@ -31,7 +31,7 @@ class ImageService {
     if (!file) {
       return {
         valid: false,
-        error: 'Aucun fichier fourni'
+        error: "Aucun fichier fourni",
       };
     }
 
@@ -39,7 +39,7 @@ class ImageService {
     if (!IMAGE_CONFIG.ALLOWED_TYPES.includes(file.mimetype)) {
       return {
         valid: false,
-        error: `Type de fichier non autorisé. Types acceptés: ${IMAGE_CONFIG.ALLOWED_EXTENSIONS.join(', ')}`
+        error: `Type de fichier non autorisé. Types acceptés: ${IMAGE_CONFIG.ALLOWED_EXTENSIONS.join(", ")}`,
       };
     }
 
@@ -47,7 +47,7 @@ class ImageService {
     if (file.size > IMAGE_CONFIG.MAX_SIZE) {
       return {
         valid: false,
-        error: `Fichier trop volumineux. Taille maximale: ${IMAGE_CONFIG.MAX_SIZE / 1024 / 1024}MB`
+        error: `Fichier trop volumineux. Taille maximale: ${IMAGE_CONFIG.MAX_SIZE / 1024 / 1024}MB`,
       };
     }
 
@@ -66,7 +66,7 @@ class ImageService {
         maxWidth = IMAGE_CONFIG.MAX_WIDTH,
         maxHeight = IMAGE_CONFIG.MAX_HEIGHT,
         quality = IMAGE_CONFIG.QUALITY,
-        addWatermark = true
+        addWatermark = true,
       } = options;
 
       // Créer l'instance Sharp
@@ -74,12 +74,14 @@ class ImageService {
 
       // Obtenir les métadonnées
       const metadata = await image.metadata();
-      logger.debug(`Image originale: ${metadata.width}x${metadata.height}, format: ${metadata.format}`);
+      logger.debug(
+        `Image originale: ${metadata.width}x${metadata.height}, format: ${metadata.format}`,
+      );
 
       // Redimensionner si nécessaire
       image = image.resize(maxWidth, maxHeight, {
-        fit: 'inside',
-        withoutEnlargement: true
+        fit: "inside",
+        withoutEnlargement: true,
       });
 
       // Ajouter un filigrane invisible si demandé
@@ -100,10 +102,12 @@ class ImageService {
           </svg>
         `);
 
-        image = image.composite([{
-          input: watermarkSvg,
-          blend: 'over'
-        }]);
+        image = image.composite([
+          {
+            input: watermarkSvg,
+            blend: "over",
+          },
+        ]);
       }
 
       // Convertir en JPEG et optimiser
@@ -115,8 +119,8 @@ class ImageService {
 
       return processedBuffer;
     } catch (error) {
-      logger.error('Erreur lors du traitement de l\'image:', error);
-      throw new Error('Échec du traitement de l\'image');
+      logger.error("Erreur lors du traitement de l'image:", error);
+      throw new Error("Échec du traitement de l'image");
     }
   }
 
@@ -126,8 +130,8 @@ class ImageService {
    * @param {string} mimeType - Type MIME de l'image
    * @returns {string} Data URL
    */
-  static bufferToDataURL(buffer, mimeType = 'image/jpeg') {
-    const base64 = buffer.toString('base64');
+  static bufferToDataURL(buffer, mimeType = "image/jpeg") {
+    const base64 = buffer.toString("base64");
     return `data:${mimeType};base64,${base64}`;
   }
 
@@ -139,7 +143,7 @@ class ImageService {
    */
   static async processAndEncode(buffer, options = {}) {
     const processedBuffer = await this.processImage(buffer, options);
-    return this.bufferToDataURL(processedBuffer, 'image/jpeg');
+    return this.bufferToDataURL(processedBuffer, "image/jpeg");
   }
 
   /**
@@ -156,11 +160,11 @@ class ImageService {
         format: metadata.format,
         size: buffer.length,
         hasAlpha: metadata.hasAlpha,
-        orientation: metadata.orientation
+        orientation: metadata.orientation,
       };
     } catch (error) {
-      logger.error('Erreur lors de la lecture des métadonnées:', error);
-      throw new Error('Impossible de lire les informations de l\'image');
+      logger.error("Erreur lors de la lecture des métadonnées:", error);
+      throw new Error("Impossible de lire les informations de l'image");
     }
   }
 
@@ -174,14 +178,14 @@ class ImageService {
     try {
       return await sharp(buffer)
         .resize(size, size, {
-          fit: 'cover',
-          position: 'center'
+          fit: "cover",
+          position: "center",
         })
         .jpeg({ quality: 70 })
         .toBuffer();
     } catch (error) {
-      logger.error('Erreur lors de la génération de la miniature:', error);
-      throw new Error('Échec de la génération de la miniature');
+      logger.error("Erreur lors de la génération de la miniature:", error);
+      throw new Error("Échec de la génération de la miniature");
     }
   }
 }

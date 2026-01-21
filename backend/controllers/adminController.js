@@ -2,16 +2,20 @@
  * ============================================
  * ADMIN CONTROLLER - Gestion administrative
  * ============================================
- * 
+ *
  * Contrôleur pour la validation des profils et gestion admin
- * 
+ *
  * @module controllers/adminController
  */
 
-const { User } = require('../models');
-const { HTTP_STATUS, SERVER_MESSAGES, USER_STATUS } = require('../utils/constants');
-const { SocketService } = require('../services/socketService');
-const logger = require('../utils/logger');
+const { User } = require("../models");
+const {
+  HTTP_STATUS,
+  SERVER_MESSAGES,
+  USER_STATUS,
+} = require("../utils/constants");
+const { SocketService } = require("../services/socketService");
+const logger = require("../utils/logger");
 
 /**
  * Contrôleur administrateur
@@ -28,11 +32,10 @@ class AdminController {
       res.json({
         success: true,
         count: profiles.length,
-        profiles: profiles.map(p => p.toAdminJSON())
+        profiles: profiles.map((p) => p.toAdminJSON()),
       });
-
     } catch (error) {
-      logger.error('Erreur récupération profils en attente:', error);
+      logger.error("Erreur récupération profils en attente:", error);
       next(error);
     }
   }
@@ -47,11 +50,10 @@ class AdminController {
 
       res.json({
         success: true,
-        count
+        count,
       });
-
     } catch (error) {
-      logger.error('Erreur comptage profils en attente:', error);
+      logger.error("Erreur comptage profils en attente:", error);
       next(error);
     }
   }
@@ -65,21 +67,20 @@ class AdminController {
       const { id } = req.params;
 
       const user = await User.findByPk(id);
-      
+
       if (!user) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
       res.json({
         success: true,
-        profile: user.toAdminJSON()
+        profile: user.toAdminJSON(),
       });
-
     } catch (error) {
-      logger.error('Erreur récupération détails profil:', error);
+      logger.error("Erreur récupération détails profil:", error);
       next(error);
     }
   }
@@ -94,11 +95,11 @@ class AdminController {
       const adminId = req.user.userId;
 
       const user = await User.findByPk(id);
-      
+
       if (!user) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
@@ -106,32 +107,33 @@ class AdminController {
       if (user.statut !== USER_STATUS.PENDING) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: 'Ce profil n\'est pas en attente de validation'
+          message: "Ce profil n'est pas en attente de validation",
         });
       }
 
       // Approuver le profil
       await user.approve(adminId);
 
-      logger.success(`Profil approuvé: ${user.pseudo} (ID: ${user.id}) par admin ${adminId}`);
+      logger.success(
+        `Profil approuvé: ${user.pseudo} (ID: ${user.id}) par admin ${adminId}`,
+      );
 
       // Notifier via Socket.io si l'utilisateur est connecté
       if (global.io) {
-        SocketService.emitToUser(user.id, 'profile:validated', {
+        SocketService.emitToUser(user.id, "profile:validated", {
           userId: user.id,
           statut: USER_STATUS.APPROVED,
-          message: 'Votre profil a été approuvé !'
+          message: "Votre profil a été approuvé !",
         });
       }
 
       res.json({
         success: true,
         message: SERVER_MESSAGES.USER.PROFILE_APPROVED,
-        profile: user.toAdminJSON()
+        profile: user.toAdminJSON(),
       });
-
     } catch (error) {
-      logger.error('Erreur approbation profil:', error);
+      logger.error("Erreur approbation profil:", error);
       next(error);
     }
   }
@@ -150,16 +152,16 @@ class AdminController {
       if (!raison || raison.trim().length === 0) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: SERVER_MESSAGES.ADMIN.VALIDATION_REQUIRED
+          message: SERVER_MESSAGES.ADMIN.VALIDATION_REQUIRED,
         });
       }
 
       const user = await User.findByPk(id);
-      
+
       if (!user) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
@@ -167,33 +169,34 @@ class AdminController {
       if (user.statut !== USER_STATUS.PENDING) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: 'Ce profil n\'est pas en attente de validation'
+          message: "Ce profil n'est pas en attente de validation",
         });
       }
 
       // Rejeter le profil
       await user.reject(adminId, raison);
 
-      logger.warn(`Profil rejeté: ${user.pseudo} (ID: ${user.id}) par admin ${adminId}. Raison: ${raison}`);
+      logger.warn(
+        `Profil rejeté: ${user.pseudo} (ID: ${user.id}) par admin ${adminId}. Raison: ${raison}`,
+      );
 
       // Notifier via Socket.io si l'utilisateur est connecté
       if (global.io) {
-        SocketService.emitToUser(user.id, 'profile:rejected', {
+        SocketService.emitToUser(user.id, "profile:rejected", {
           userId: user.id,
           statut: USER_STATUS.REJECTED,
           raison: raison,
-          message: 'Votre profil a été rejeté'
+          message: "Votre profil a été rejeté",
         });
       }
 
       res.json({
         success: true,
         message: SERVER_MESSAGES.USER.PROFILE_REJECTED,
-        profile: user.toAdminJSON()
+        profile: user.toAdminJSON(),
       });
-
     } catch (error) {
-      logger.error('Erreur rejet profil:', error);
+      logger.error("Erreur rejet profil:", error);
       next(error);
     }
   }
@@ -210,28 +213,28 @@ class AdminController {
       if (!Array.isArray(userIds) || userIds.length === 0) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: 'Liste d\'IDs invalide'
+          message: "Liste d'IDs invalide",
         });
       }
 
       const results = {
         approved: [],
-        failed: []
+        failed: [],
       };
 
       for (const userId of userIds) {
         try {
           const user = await User.findByPk(userId);
-          
+
           if (user && user.statut === USER_STATUS.PENDING) {
             await user.approve(adminId);
             results.approved.push(userId);
 
             // Notifier
             if (global.io) {
-              SocketService.emitToUser(user.id, 'profile:validated', {
+              SocketService.emitToUser(user.id, "profile:validated", {
                 userId: user.id,
-                statut: USER_STATUS.APPROVED
+                statut: USER_STATUS.APPROVED,
               });
             }
           } else {
@@ -243,17 +246,18 @@ class AdminController {
         }
       }
 
-      logger.success(`Approbation en masse: ${results.approved.length} profils approuvés par admin ${adminId}`);
+      logger.success(
+        `Approbation en masse: ${results.approved.length} profils approuvés par admin ${adminId}`,
+      );
 
       res.json({
         success: true,
         approved: results.approved.length,
         failed: results.failed.length,
-        results
+        results,
       });
-
     } catch (error) {
-      logger.error('Erreur approbation en masse:', error);
+      logger.error("Erreur approbation en masse:", error);
       next(error);
     }
   }
@@ -264,14 +268,14 @@ class AdminController {
    */
   static async getAdminStats(req, res, next) {
     try {
-      const { Op } = require('sequelize');
+      const { Op } = require("sequelize");
 
       const [
         totalUsers,
         pendingCount,
         approvedCount,
         rejectedCount,
-        recentApprovals
+        recentApprovals,
       ] = await Promise.all([
         User.count(),
         User.count({ where: { statut: USER_STATUS.PENDING } }),
@@ -281,10 +285,10 @@ class AdminController {
           where: {
             statut: USER_STATUS.APPROVED,
             dateValidation: {
-              [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) // 24h
-            }
-          }
-        })
+              [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24h
+            },
+          },
+        }),
       ]);
 
       res.json({
@@ -294,12 +298,11 @@ class AdminController {
           pending: pendingCount,
           approved: approvedCount,
           rejected: rejectedCount,
-          recentApprovals
-        }
+          recentApprovals,
+        },
       });
-
     } catch (error) {
-      logger.error('Erreur récupération stats admin:', error);
+      logger.error("Erreur récupération stats admin:", error);
       next(error);
     }
   }
@@ -311,7 +314,7 @@ class AdminController {
   static async searchUsers(req, res, next) {
     try {
       const { query, statut, ville, page = 1, limit = 20 } = req.query;
-      const { Op } = require('sequelize');
+      const { Op } = require("sequelize");
 
       const where = {};
 
@@ -330,7 +333,7 @@ class AdminController {
         where[Op.or] = [
           { pseudo: { [Op.iLike]: `%${query}%` } },
           { nom: { [Op.iLike]: `%${query}%` } },
-          { email: { [Op.iLike]: `%${query}%` } }
+          { email: { [Op.iLike]: `%${query}%` } },
         ];
       }
 
@@ -338,7 +341,7 @@ class AdminController {
         where,
         limit: parseInt(limit),
         offset: (parseInt(page) - 1) * parseInt(limit),
-        order: [['dateCreation', 'DESC']]
+        order: [["dateCreation", "DESC"]],
       });
 
       res.json({
@@ -346,11 +349,10 @@ class AdminController {
         count,
         totalPages: Math.ceil(count / limit),
         currentPage: parseInt(page),
-        users: users.map(u => u.toAdminJSON())
+        users: users.map((u) => u.toAdminJSON()),
       });
-
     } catch (error) {
-      logger.error('Erreur recherche utilisateurs:', error);
+      logger.error("Erreur recherche utilisateurs:", error);
       next(error);
     }
   }

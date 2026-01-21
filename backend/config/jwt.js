@@ -1,171 +1,103 @@
 /**
  * ============================================
- * DATABASE CONFIG - Configuration PostgreSQL
+ * JWT CONFIG - Configuration JSON Web Token
  * ============================================
- * 
- * Configuration de la connexion à la base de données
- * avec Sequelize ORM
- * 
- * @module config/database
+ *
+ * Configuration pour l'authentification JWT
+ *
+ * @module config/jwt
+ * @version 3.0.0
  */
 
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
-const logger = require('../utils/logger');
+require("dotenv").config();
 
 /**
- * Configuration de la connexion Sequelize
+ * Configuration JWT
  */
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'messagerie_db',
-  process.env.DB_USER || 'postgres',
-  process.env.DB_PASSWORD || 'postgres',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 5432,
-    dialect: 'postgres',
-    
-    // Logging
-    logging: process.env.NODE_ENV === 'development' 
-      ? (msg) => logger.debug(msg)
-      : false,
-    
-    // Pool de connexions
-    pool: {
-      max: 5,           // Maximum de connexions
-      min: 0,           // Minimum de connexions
-      acquire: 30000,   // Timeout pour acquérir une connexion
-      idle: 10000       // Temps avant qu'une connexion inactive soit fermée
-    },
-    
-    // Dialecte PostgreSQL
-    dialectOptions: {
-      // SSL en production
-      ...(process.env.NODE_ENV === 'production' && {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      }),
-      
-      // Timezone
-      timezone: 'UTC'
-    },
-    
-    // Options de requête par défaut
-    define: {
-      // Utiliser camelCase pour les noms de colonnes
-      underscored: false,
-      
-      // Ajouter automatiquement createdAt et updatedAt
-      timestamps: true,
-      
-      // Ne pas supprimer physiquement (soft delete)
-      paranoid: false,
-      
-      // Éviter le pluriel automatique des noms de tables
-      freezeTableName: true
-    },
-    
-    // Benchmark des requêtes en développement
-    benchmark: process.env.NODE_ENV === 'development',
-    
-    // Retry automatique en cas d'erreur
-    retry: {
-      max: 3,
-      match: [
-        /ETIMEDOUT/,
-        /EHOSTUNREACH/,
-        /ECONNRESET/,
-        /ECONNREFUSED/,
-        /ETIMEDOUT/,
-        /ESOCKETTIMEDOUT/,
-        /EHOSTUNREACH/,
-        /EPIPE/,
-        /EAI_AGAIN/
-      ]
-    }
-  }
-);
+const jwtConfig = {
+  /**
+   * Clé secrète pour signer les tokens
+   * IMPORTANT: Doit être changée en production et gardée secrète
+   */
+  secret:
+    process.env.JWT_SECRET ||
+    "dev-secret-key-CHANGE-ME-IN-PRODUCTION-1234567890",
 
-/**
- * Test de la connexion à la base de données
- */
-async function testConnection() {
-  try {
-    await sequelize.authenticate();
-    logger.success('✅ Connexion à PostgreSQL établie avec succès');
-    
-    // Afficher les détails de la connexion en développement
-    if (process.env.NODE_ENV === 'development') {
-      const dbConfig = sequelize.config;
-      logger.info(`📊 Base de données: ${dbConfig.database}`);
-      logger.info(`🖥️  Hôte: ${dbConfig.host}:${dbConfig.port}`);
-      logger.info(`👤 Utilisateur: ${dbConfig.username}`);
-    }
-    
-    return true;
-  } catch (error) {
-    logger.error('❌ Impossible de se connecter à PostgreSQL:', error.message);
-    
-    // Afficher des conseils de débogage
-    logger.warn('Vérifiez:');
-    logger.warn('  1. PostgreSQL est démarré');
-    logger.warn('  2. Les variables d\'environnement (.env)');
-    logger.warn('  3. L\'utilisateur et le mot de passe');
-    logger.warn('  4. Le nom de la base de données existe');
-    
-    return false;
-  }
-}
+  /**
+   * Durée de validité du token principal
+   * Format: '24h', '7d', '30m', etc.
+   */
+  expiresIn: process.env.JWT_EXPIRES_IN || "24h",
 
-/**
- * Synchronise les modèles avec la base de données
- */
-async function syncDatabase(options = {}) {
-  try {
-    const syncOptions = {
-      // En développement: altère les tables existantes
-      alter: process.env.NODE_ENV === 'development',
-      
-      // En production: ne force jamais (ne supprime pas les données)
-      force: false,
-      
-      ...options
-    };
-    
-    await sequelize.sync(syncOptions);
-    
-    if (syncOptions.alter) {
-      logger.success('✅ Modèles synchronisés (ALTER)');
-    } else {
-      logger.success('✅ Modèles synchronisés');
-    }
-    
-    return true;
-  } catch (error) {
-    logger.error('❌ Erreur lors de la synchronisation:', error.message);
-    return false;
-  }
-}
+  /**
+   * Durée de validité du refresh token
+   * Format: '7d', '30d', etc.
+   */
+  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
 
-/**
- * Ferme proprement la connexion
- */
-async function closeConnection() {
-  try {
-    await sequelize.close();
-    logger.info('Connexion à PostgreSQL fermée');
-    return true;
-  } catch (error) {
-    logger.error('Erreur lors de la fermeture de la connexion:', error);
-    return false;
-  }
-}
+  /**
+   * Algorithme de signature
+   * Recommandé: HS256 (HMAC avec SHA-256)
+   */
+  algorithm: "HS256",
 
-module.exports = {
-  sequelize,
-  testConnection,
-  syncDatabase,
-  closeConnection
+  /**
+   * Issuer (émetteur) du token
+   */
+  issuer: process.env.JWT_ISSUER || "MessagerieApp",
+
+  /**
+   * Audience (destinataire) du token
+   */
+  audience: process.env.JWT_AUDIENCE || "MessagerieApp-Users",
+
+  /**
+   * Options de signature
+   */
+  signOptions: {
+    algorithm: "HS256",
+    issuer: process.env.JWT_ISSUER || "MessagerieApp",
+    audience: process.env.JWT_AUDIENCE || "MessagerieApp-Users",
+  },
+
+  /**
+   * Options de vérification
+   */
+  verifyOptions: {
+    algorithms: ["HS256"],
+    issuer: process.env.JWT_ISSUER || "MessagerieApp",
+    audience: process.env.JWT_AUDIENCE || "MessagerieApp-Users",
+  },
 };
+
+/**
+ * Validation de la configuration
+ */
+if (process.env.NODE_ENV === "production") {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes("CHANGE-ME")) {
+    console.error(
+      "⚠️  ERREUR CRITIQUE: JWT_SECRET non défini ou utilise la valeur par défaut!",
+    );
+    console.error(
+      "   Définissez JWT_SECRET dans votre fichier .env pour la production",
+    );
+    process.exit(1);
+  }
+
+  if (jwtConfig.secret.length < 32) {
+    console.warn(
+      "⚠️  AVERTISSEMENT: JWT_SECRET devrait faire au moins 32 caractères",
+    );
+  }
+}
+
+/**
+ * Génère une clé secrète sécurisée (pour aide)
+ * Utiliser: node -e "console.log(require('./config/jwt').generateSecret())"
+ */
+jwtConfig.generateSecret = () => {
+  const crypto = require("crypto");
+  return crypto.randomBytes(64).toString("hex");
+};
+
+module.exports = jwtConfig;

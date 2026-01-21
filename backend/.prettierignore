@@ -1,0 +1,27 @@
+# Dépendances
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build
+dist/
+build/
+coverage/
+
+# Uploads
+uploads/
+temp/
+tmp/
+
+# Logs
+*.log
+logs/
+
+# Base de données
+*.sqlite
+*.sqlite3
+*.db
+
+# Fichiers minifiés
+*.min.js
+*.min.css

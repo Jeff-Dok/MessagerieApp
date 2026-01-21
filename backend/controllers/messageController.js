@@ -2,17 +2,21 @@
  * ============================================
  * MESSAGE CONTROLLER - Contrôleur messages
  * ============================================
- * 
+ *
  * Gère l'envoi, la réception et la gestion des messages
- * 
+ *
  * @module controllers/messageController
  */
 
-const { Message, User } = require('../models');
-const { HTTP_STATUS, SERVER_MESSAGES, SOCKET_EVENTS } = require('../utils/constants');
-const ImageService = require('../services/imageService');
-const { SocketService } = require('../services/socketService');
-const logger = require('../utils/logger');
+const { Message, User } = require("../models");
+const {
+  HTTP_STATUS,
+  SERVER_MESSAGES,
+  SOCKET_EVENTS,
+} = require("../utils/constants");
+const ImageService = require("../services/imageService");
+const { SocketService } = require("../services/socketService");
+const logger = require("../utils/logger");
 
 /**
  * Contrôleur messages
@@ -32,7 +36,7 @@ class MessageController {
       if (!receiver) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
@@ -41,16 +45,16 @@ class MessageController {
         senderId,
         receiverId,
         content,
-        messageType: 'text',
-        read: false
+        messageType: "text",
+        read: false,
       });
 
       // Récupérer avec les infos utilisateurs
       const fullMessage = await Message.findByPk(message.id, {
         include: [
-          { model: User, as: 'sender', attributes: ['id', 'nom', 'email'] },
-          { model: User, as: 'receiver', attributes: ['id', 'nom', 'email'] }
-        ]
+          { model: User, as: "sender", attributes: ["id", "nom", "email"] },
+          { model: User, as: "receiver", attributes: ["id", "nom", "email"] },
+        ],
       });
 
       // Émettre via Socket.io
@@ -58,7 +62,7 @@ class MessageController {
         senderId,
         receiverId,
         SOCKET_EVENTS.MESSAGE_NEW,
-        fullMessage
+        fullMessage,
       );
 
       logger.info(`Message texte envoyé de ${senderId} à ${receiverId}`);
@@ -66,11 +70,10 @@ class MessageController {
       res.status(HTTP_STATUS.CREATED).json({
         success: true,
         message: SERVER_MESSAGES.MESSAGE.SENT,
-        data: fullMessage
+        data: fullMessage,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de l\'envoi du message:', error);
+      logger.error("Erreur lors de l'envoi du message:", error);
       next(error);
     }
   }
@@ -88,7 +91,7 @@ class MessageController {
       if (!req.file) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: SERVER_MESSAGES.IMAGE.NO_FILE
+          message: SERVER_MESSAGES.IMAGE.NO_FILE,
         });
       }
 
@@ -97,7 +100,7 @@ class MessageController {
       if (!validation.valid) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: validation.error
+          message: validation.error,
         });
       }
 
@@ -106,34 +109,37 @@ class MessageController {
       if (!receiver) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.USER.NOT_FOUND
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
         });
       }
 
       // Traiter et encoder l'image
-      const imageDataUrl = await ImageService.processAndEncode(req.file.buffer, {
-        addWatermark: true
-      });
+      const imageDataUrl = await ImageService.processAndEncode(
+        req.file.buffer,
+        {
+          addWatermark: true,
+        },
+      );
 
       // Créer le message
       const message = await Message.create({
         senderId,
         receiverId,
-        content: '[Image]',
-        messageType: 'image',
+        content: "[Image]",
+        messageType: "image",
         imageData: imageDataUrl,
-        imageMimeType: 'image/jpeg',
+        imageMimeType: "image/jpeg",
         imageFileName: req.file.originalname,
         read: false,
-        imageExpired: false
+        imageExpired: false,
       });
 
       // Récupérer avec les infos utilisateurs
       const fullMessage = await Message.findByPk(message.id, {
         include: [
-          { model: User, as: 'sender', attributes: ['id', 'nom', 'email'] },
-          { model: User, as: 'receiver', attributes: ['id', 'nom', 'email'] }
-        ]
+          { model: User, as: "sender", attributes: ["id", "nom", "email"] },
+          { model: User, as: "receiver", attributes: ["id", "nom", "email"] },
+        ],
       });
 
       // Émettre via Socket.io
@@ -141,7 +147,7 @@ class MessageController {
         senderId,
         receiverId,
         SOCKET_EVENTS.MESSAGE_NEW,
-        fullMessage
+        fullMessage,
       );
 
       logger.success(`Image envoyée de ${senderId} à ${receiverId}`);
@@ -149,11 +155,10 @@ class MessageController {
       res.status(HTTP_STATUS.CREATED).json({
         success: true,
         message: SERVER_MESSAGES.IMAGE.SENT,
-        data: fullMessage
+        data: fullMessage,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de l\'envoi de l\'image:', error);
+      logger.error("Erreur lors de l'envoi de l'image:", error);
       next(error);
     }
   }
@@ -171,7 +176,7 @@ class MessageController {
       if (!message) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND
+          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
         });
       }
 
@@ -179,15 +184,15 @@ class MessageController {
       if (!message.canBeViewedBy(userId)) {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
-          message: SERVER_MESSAGES.USER.ACCESS_DENIED
+          message: SERVER_MESSAGES.USER.ACCESS_DENIED,
         });
       }
 
       // Vérifier que c'est une image
-      if (message.messageType !== 'image') {
+      if (message.messageType !== "image") {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: SERVER_MESSAGES.IMAGE.NOT_IMAGE
+          message: SERVER_MESSAGES.IMAGE.NOT_IMAGE,
         });
       }
 
@@ -202,8 +207,8 @@ class MessageController {
         {
           messageId: message.id,
           viewedAt: message.imageViewedAt,
-          expiresAt: message.imageExpiresAt
-        }
+          expiresAt: message.imageExpiresAt,
+        },
       );
 
       logger.info(`Image ${id} vue par utilisateur ${userId}`);
@@ -212,11 +217,10 @@ class MessageController {
         success: true,
         message: SERVER_MESSAGES.IMAGE.VIEWED,
         viewedAt: message.imageViewedAt,
-        expiresAt: message.imageExpiresAt
+        expiresAt: message.imageExpiresAt,
       });
-
     } catch (error) {
-      logger.error('Erreur lors du marquage de l\'image comme vue:', error);
+      logger.error("Erreur lors du marquage de l'image comme vue:", error);
       next(error);
     }
   }
@@ -234,7 +238,7 @@ class MessageController {
       if (!message) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND
+          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
         });
       }
 
@@ -242,14 +246,14 @@ class MessageController {
       if (!message.canBeViewedBy(userId)) {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
-          message: SERVER_MESSAGES.USER.ACCESS_DENIED
+          message: SERVER_MESSAGES.USER.ACCESS_DENIED,
         });
       }
 
-      if (message.messageType !== 'image') {
+      if (message.messageType !== "image") {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: SERVER_MESSAGES.IMAGE.NOT_IMAGE
+          message: SERVER_MESSAGES.IMAGE.NOT_IMAGE,
         });
       }
 
@@ -261,18 +265,17 @@ class MessageController {
         message.senderId,
         message.receiverId,
         SOCKET_EVENTS.IMAGE_EXPIRED,
-        { messageId: message.id }
+        { messageId: message.id },
       );
 
       logger.info(`Image ${id} expirée manuellement par utilisateur ${userId}`);
 
       res.json({
         success: true,
-        message: SERVER_MESSAGES.IMAGE.EXPIRED
+        message: SERVER_MESSAGES.IMAGE.EXPIRED,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de l\'expiration de l\'image:', error);
+      logger.error("Erreur lors de l'expiration de l'image:", error);
       next(error);
     }
   }
@@ -286,19 +289,21 @@ class MessageController {
       const { userId } = req.params;
       const currentUserId = req.user.userId;
 
-      const messages = await Message.findConversation(currentUserId, parseInt(userId));
+      const messages = await Message.findConversation(
+        currentUserId,
+        parseInt(userId),
+      );
 
       // Filtrer les images expirées
-      const secureMessages = messages.map(msg => msg.toSecureJSON());
+      const secureMessages = messages.map((msg) => msg.toSecureJSON());
 
       res.json({
         success: true,
         count: secureMessages.length,
-        messages: secureMessages
+        messages: secureMessages,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de la récupération de la conversation:', error);
+      logger.error("Erreur lors de la récupération de la conversation:", error);
       next(error);
     }
   }
@@ -310,33 +315,29 @@ class MessageController {
   static async getAllMessages(req, res, next) {
     try {
       const userId = req.user.userId;
-      const { Op } = require('sequelize');
+      const { Op } = require("sequelize");
 
       const messages = await Message.findAll({
         where: {
-          [Op.or]: [
-            { senderId: userId },
-            { receiverId: userId }
-          ]
+          [Op.or]: [{ senderId: userId }, { receiverId: userId }],
         },
         include: [
-          { model: User, as: 'sender', attributes: ['id', 'nom', 'email'] },
-          { model: User, as: 'receiver', attributes: ['id', 'nom', 'email'] }
+          { model: User, as: "sender", attributes: ["id", "nom", "email"] },
+          { model: User, as: "receiver", attributes: ["id", "nom", "email"] },
         ],
-        order: [['date', 'DESC']]
+        order: [["date", "DESC"]],
       });
 
       // Filtrer les images expirées
-      const secureMessages = messages.map(msg => msg.toSecureJSON());
+      const secureMessages = messages.map((msg) => msg.toSecureJSON());
 
       res.json({
         success: true,
         count: secureMessages.length,
-        messages: secureMessages
+        messages: secureMessages,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de la récupération des messages:', error);
+      logger.error("Erreur lors de la récupération des messages:", error);
       next(error);
     }
   }
@@ -354,7 +355,7 @@ class MessageController {
       if (!message) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND
+          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
         });
       }
 
@@ -362,7 +363,7 @@ class MessageController {
       if (message.receiverId !== userId) {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
-          message: SERVER_MESSAGES.USER.ACCESS_DENIED
+          message: SERVER_MESSAGES.USER.ACCESS_DENIED,
         });
       }
 
@@ -370,11 +371,10 @@ class MessageController {
 
       res.json({
         success: true,
-        message: SERVER_MESSAGES.MESSAGE.MARKED_READ
+        message: SERVER_MESSAGES.MESSAGE.MARKED_READ,
       });
-
     } catch (error) {
-      logger.error('Erreur lors du marquage comme lu:', error);
+      logger.error("Erreur lors du marquage comme lu:", error);
       next(error);
     }
   }
@@ -393,7 +393,7 @@ class MessageController {
       if (!message) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
-          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND
+          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
         });
       }
 
@@ -401,7 +401,7 @@ class MessageController {
       if (!message.canBeDeletedBy(userId, userRole)) {
         return res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
-          message: SERVER_MESSAGES.USER.ACCESS_DENIED
+          message: SERVER_MESSAGES.USER.ACCESS_DENIED,
         });
       }
 
@@ -411,11 +411,10 @@ class MessageController {
 
       res.json({
         success: true,
-        message: SERVER_MESSAGES.MESSAGE.DELETED
+        message: SERVER_MESSAGES.MESSAGE.DELETED,
       });
-
     } catch (error) {
-      logger.error('Erreur lors de la suppression du message:', error);
+      logger.error("Erreur lors de la suppression du message:", error);
       next(error);
     }
   }

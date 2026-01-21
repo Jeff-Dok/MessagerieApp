@@ -2,21 +2,21 @@
  * ============================================
  * SOCKET SERVICE - Gestion de Socket.io
  * ============================================
- * 
+ *
  * Service centralisé pour gérer les connexions WebSocket
- * 
+ *
  * Fonctionnalités:
  * - Gestion des connexions/déconnexions
  * - Émission d'événements
  * - Gestion des rooms de conversation
  * - Suivi des utilisateurs en ligne
- * 
+ *
  * @module services/socketService
  */
 
-const { SOCKET_EVENTS } = require('../utils/constants');
-const { generateRoomId } = require('../utils/helpers');
-const logger = require('../utils/logger');
+const { SOCKET_EVENTS } = require("../utils/constants");
+const { generateRoomId } = require("../utils/helpers");
+const logger = require("../utils/logger");
 
 /**
  * Map des utilisateurs connectés: userId -> socketId
@@ -68,7 +68,7 @@ class SocketService {
       });
     });
 
-    logger.success('✅ Socket.io initialisé avec succès');
+    logger.success("✅ Socket.io initialisé avec succès");
   }
 
   /**
@@ -81,7 +81,7 @@ class SocketService {
     // Notifier tous les utilisateurs
     this.io.emit(SOCKET_EVENTS.USER_ONLINE, {
       userId,
-      online: true
+      online: true,
     });
   }
 
@@ -91,7 +91,7 @@ class SocketService {
   static handleConversationJoin(socket, data) {
     const { userId1, userId2 } = data;
     const room = generateRoomId(userId1, userId2);
-    
+
     socket.join(room);
     logger.info(`💬 Socket ${socket.id} a rejoint la room ${room}`);
   }
@@ -100,10 +100,10 @@ class SocketService {
    * Gère l'envoi d'un message
    */
   static handleMessageSend(socket, message) {
-    logger.debug('📨 Message reçu via Socket.io:', message);
+    logger.debug("📨 Message reçu via Socket.io:", message);
 
     const room = generateRoomId(message.senderId, message.receiverId);
-    
+
     // Envoyer le message à tous dans la room
     this.io.to(room).emit(SOCKET_EVENTS.MESSAGE_NEW, message);
 
@@ -113,7 +113,7 @@ class SocketService {
       this.io.to(receiverSocketId).emit(SOCKET_EVENTS.NOTIFICATION, {
         senderId: message.senderId,
         senderName: message.senderName,
-        preview: message.content ? message.content.substring(0, 50) : '[Image]'
+        preview: message.content ? message.content.substring(0, 50) : "[Image]",
       });
     }
   }
@@ -146,11 +146,11 @@ class SocketService {
     for (let [userId, socketId] of connectedUsers.entries()) {
       if (socketId === socket.id) {
         connectedUsers.delete(userId);
-        
+
         // Notifier que l'utilisateur est hors ligne
         this.io.emit(SOCKET_EVENTS.USER_ONLINE, {
           userId: parseInt(userId),
-          online: false
+          online: false,
         });
         break;
       }
@@ -162,7 +162,7 @@ class SocketService {
    */
   static emitToRoom(userId1, userId2, event, data) {
     if (!this.io) {
-      logger.warn('Socket.io non initialisé');
+      logger.warn("Socket.io non initialisé");
       return;
     }
 
@@ -175,7 +175,7 @@ class SocketService {
    */
   static emitToUser(userId, event, data) {
     if (!this.io) {
-      logger.warn('Socket.io non initialisé');
+      logger.warn("Socket.io non initialisé");
       return;
     }
 
@@ -190,7 +190,7 @@ class SocketService {
    */
   static emitToAll(event, data) {
     if (!this.io) {
-      logger.warn('Socket.io non initialisé');
+      logger.warn("Socket.io non initialisé");
       return;
     }
 
@@ -201,7 +201,7 @@ class SocketService {
    * Obtient la liste des utilisateurs connectés
    */
   static getConnectedUsers() {
-    return Array.from(connectedUsers.keys()).map(id => parseInt(id));
+    return Array.from(connectedUsers.keys()).map((id) => parseInt(id));
   }
 
   /**
@@ -221,5 +221,5 @@ function initializeSocketService(io) {
 
 module.exports = {
   SocketService,
-  initializeSocketService
+  initializeSocketService,
 };

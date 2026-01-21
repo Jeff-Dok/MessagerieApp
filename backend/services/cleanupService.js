@@ -2,21 +2,21 @@
  * ============================================
  * CLEANUP SERVICE - Nettoyage automatique
  * ============================================
- * 
+ *
  * Service pour nettoyer automatiquement les images expirées
- * 
+ *
  * Fonctionnalités:
  * - Détection des images expirées
  * - Suppression des données d'image
  * - Notification Socket.io
  * - Exécution planifiée
- * 
+ *
  * @module services/cleanupService
  */
 
-const { Message } = require('../models');
-const { CLEANUP_CONFIG, SOCKET_EVENTS } = require('../utils/constants');
-const logger = require('../utils/logger');
+const { Message } = require("../models");
+const { CLEANUP_CONFIG, SOCKET_EVENTS } = require("../utils/constants");
+const logger = require("../utils/logger");
 
 /**
  * Service de nettoyage automatique
@@ -32,7 +32,7 @@ class CleanupService {
       const expiredMessages = await Message.findExpiredImages();
 
       if (expiredMessages.length === 0) {
-        logger.debug('Aucune image à nettoyer');
+        logger.debug("Aucune image à nettoyer");
         return 0;
       }
 
@@ -44,21 +44,20 @@ class CleanupService {
 
         // Notifier via Socket.io si disponible
         if (global.io) {
-          const { SocketService } = require('./socketService');
+          const { SocketService } = require("./socketService");
           SocketService.emitToRoom(
             message.senderId,
             message.receiverId,
             SOCKET_EVENTS.IMAGE_EXPIRED,
-            { messageId: message.id }
+            { messageId: message.id },
           );
         }
       }
 
       logger.success(`🗑️  ${cleanedCount} image(s) expirée(s) nettoyée(s)`);
       return cleanedCount;
-
     } catch (error) {
-      logger.error('Erreur lors du nettoyage des images:', error);
+      logger.error("Erreur lors du nettoyage des images:", error);
       return 0;
     }
   }
@@ -67,7 +66,7 @@ class CleanupService {
    * Démarre le service de nettoyage automatique
    */
   static start() {
-    logger.info('🕐 Démarrage du service de nettoyage automatique');
+    logger.info("🕐 Démarrage du service de nettoyage automatique");
 
     // Exécuter immédiatement
     this.cleanupExpiredImages();
@@ -78,7 +77,9 @@ class CleanupService {
       this.cleanupExpiredImages();
     }, intervalMs);
 
-    logger.success(`✅ Service de nettoyage démarré (intervalle: ${CLEANUP_CONFIG.INTERVAL} min)`);
+    logger.success(
+      `✅ Service de nettoyage démarré (intervalle: ${CLEANUP_CONFIG.INTERVAL} min)`,
+    );
   }
 
   /**
@@ -88,7 +89,7 @@ class CleanupService {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      logger.info('Service de nettoyage arrêté');
+      logger.info("Service de nettoyage arrêté");
     }
   }
 
@@ -100,15 +101,14 @@ class CleanupService {
   static async cleanupImage(messageId) {
     try {
       const message = await Message.findByPk(messageId);
-      
-      if (!message || message.messageType !== 'image') {
+
+      if (!message || message.messageType !== "image") {
         return false;
       }
 
       await message.expireImage();
       logger.info(`Image ${messageId} nettoyée manuellement`);
       return true;
-
     } catch (error) {
       logger.error(`Erreur lors du nettoyage de l'image ${messageId}:`, error);
       return false;
@@ -125,5 +125,5 @@ function startCleanupService() {
 
 module.exports = {
   CleanupService,
-  startCleanupService
+  startCleanupService,
 };

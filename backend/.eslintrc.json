@@ -1,0 +1,112 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended", "prettier"
+  ],
+  "plugins": [
+    "prettier"],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "rules": {
+    "indent": ["error", 2],
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
+    "no-unused-vars": ["warn", { 
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }],
+    "no-console": ["warn", { 
+      "allow": ["warn", "error", "info"] 
+    }],
+    "prefer-const": "error",
+    "prettier/prettier": "error",
+    "no-var": "error",
+    "arrow-spacing": "error",
+    "comma-dangle": ["error", "never"],
+    "eqeqeq": ["error", "always"],
+    "no-trailing-spaces": "error",
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+    "brace-style": ["error", "1tbs"],
+    "camelcase": ["warn", { 
+      "properties": "never" 
+    }],
+    "max-len": ["warn", { 
+      "code": 100,
+      "ignoreComments": true,
+      "ignoreStrings": true,
+      "ignoreTemplateLiterals": true
+    }],
+    "no-multiple-empty-lines": ["error", { 
+      "max": 2,
+      "maxEOF": 1 
+    }],
+    "space-before-function-paren": ["error", {
+      "anonymous": "always",
+      "named": "never",
+      "asyncArrow": "always"
+    }],
+    "keyword-spacing": "error",
+    "space-infix-ops": "error",
+    "comma-spacing": "error",
+    "no-multi-spaces": "error",
+    "no-duplicate-imports": "error",
+    "prefer-template": "warn",
+    "template-curly-spacing": "error",
+    "prefer-arrow-callback": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["backend/**/*.js"],
+      "env": {
+        "node": true,
+        "browser": false
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["frontend/**/*.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "globals": {
+        "io": "readonly",
+        "API": "readonly",
+        "socketManager": "readonly",
+        "MessageRenderer": "readonly",
+        "ConversationList": "readonly",
+        "Notifications": "readonly",
+        "ImageHandler": "readonly",
+        "expirationManager": "readonly",
+        "MessageReactions": "readonly",
+        "SearchFilterService": "readonly",
+        "AdvancedNotifications": "readonly"
+      }
+    },
+    {
+      "files": ["**/*.test.js", "**/*.spec.js"],
+      "env": {
+        "jest": true
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    "build/",
+    "coverage/",
+    "*.min.js",
+    "frontend/js/libs/",
+    "backend/uploads/"
+  ]
+}

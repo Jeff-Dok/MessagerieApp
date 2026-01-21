@@ -2,9 +2,9 @@
  * ============================================
  * HELPERS - Fonctions utilitaires
  * ============================================
- * 
+ *
  * Collection de fonctions helper réutilisables
- * 
+ *
  * @module utils/helpers
  */
 
@@ -14,12 +14,12 @@
  * @returns {string} Date formatée
  */
 function formatDate(date) {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return new Date(date).toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -33,11 +33,11 @@ function generateSlug(text) {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
 }
 
 /**
@@ -80,7 +80,7 @@ function isValidEmail(email) {
  */
 function cleanObject(obj) {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, value]) => value != null)
+    Object.entries(obj).filter(([_, value]) => value != null),
   );
 }
 
@@ -90,7 +90,7 @@ function cleanObject(obj) {
  * @returns {Promise} Promise qui se résout après le délai
  */
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -102,14 +102,14 @@ function getTimeRemaining(expiresAt) {
   const now = new Date();
   const expiration = new Date(expiresAt);
   const timeLeft = expiration - now;
-  
+
   if (timeLeft <= 0) {
     return { minutes: 0, seconds: 0, expired: true };
   }
-  
+
   const minutes = Math.floor(timeLeft / 60000);
   const seconds = Math.floor((timeLeft % 60000) / 1000);
-  
+
   return { minutes, seconds, expired: false };
 }
 
@@ -120,7 +120,7 @@ function getTimeRemaining(expiresAt) {
  * @param {string} suffix - Suffixe à ajouter
  * @returns {string} Texte tronqué
  */
-function truncate(text, maxLength = 50, suffix = '...') {
+function truncate(text, maxLength = 50, suffix = "...") {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength - suffix.length) + suffix;
 }
@@ -145,5 +145,5 @@ module.exports = {
   sleep,
   getTimeRemaining,
   truncate,
-  randomInt
+  randomInt,
 };

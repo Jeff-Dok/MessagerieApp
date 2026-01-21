@@ -1,7 +1,7 @@
 {
   "name": "messagerie-backend",
-  "version": "3.0.0",
-  "description": "Backend optimisé avec système de profils étendus et validation admin",
+  "version": "3.1.0",
+  "description": "Backend optimisé avec système de profils étendus, validation admin et fonctionnalités avancées",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,10 @@
     "db:reset": "npm run db:init && npm run db:migrate && npm run db:seed",
     "test": "jest --coverage",
     "lint": "eslint .",
-    "format": "prettier --write \"**/*.js\""
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.js\"",
+    "format:check": "prettier --check \"**/*.js\"",
+    "prepare": "husky"
   },
   "keywords": [
     "messaging",
@@ -23,33 +26,99 @@
     "profiles",
     "admin-panel"
   ],
-  "author": "MessagerieApp Team",
+  "author": {
+    "name": "MessagerieApp Team",
+    "email": "team@messagerie-app.com",
+    "url": "https://github.com/Jeff-Dok/MessagerieApp"
+  },
+  "contributors": [
+    {
+      "name": "Jean-François G.",
+      "email": "jn.francois.gagnon@gmail.com",
+      "url": "https://github.com/Jeff-Dok"
+    }
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jeff-Dok/MessagerieApp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Jeff-Dok/MessagerieApp/issues"
+  },
+  "homepage": "https://github.com/Jeff-Dok/MessagerieApp#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
     "pg": "^8.17.2",
     "sequelize": "^6.37.7",
-    "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.3",
-    "dotenv": "^17.2.3",
-    "cors": "^2.8.5",
-    "express-validator": "^7.3.1",
-    "morgan": "^1.10.1",
-    "socket.io": "^4.8.3",
-    "multer": "^2.0.2",
     "sharp": "^0.34.5",
-    "helmet": "^8.1.0",
-    "compression": "^1.8.1",
-    "express-rate-limit": "^8.2.1"
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "lint-staged": "^16.2.7",
     "nodemon": "^3.1.11",
-    "eslint": "^9.39.2",
-    "prettier": "^3.8.0",
-    "jest": "^30.2.0"
+    "prettier": "^3.8.0"
   },
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=6.0.0"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!node_modules/**",
+      "!coverage/**",
+      "!database/**",
+      "!logs/**"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    }
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "uploads/*",
+      "logs/*",
+      "coverage/*",
+      "node_modules/*",
+      "test/*",
+      "*.test.js"
+    ],
+    "delay": 500,
+    "env": {
+      "NODE_ENV": "development"
+    }
   }
 }

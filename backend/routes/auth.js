@@ -2,25 +2,25 @@
  * ============================================
  * AUTH ROUTES - Routes d'authentification
  * ============================================
- * 
+ *
  * Routes pour inscription avec photo et vérification statut
- * 
+ *
  * @module routes/auth
  * @version 3.0.0
  */
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const AuthController = require('../controllers/authController');
-const { 
-  validateRegistration, 
-  validateLogin, 
-  validateCheckStatus 
-} = require('../middleware/validation');
-const { authenticate } = require('../middleware/auth');
-const { authLimiter } = require('../middleware/rateLimiter');
-const upload = require('../config/multer');
-const ProfilePhotoService = require('../services/profilePhotoService');
+const AuthController = require("../controllers/authController");
+const {
+  validateRegistration,
+  validateLogin,
+  validateCheckStatus,
+} = require("../middleware/validation");
+const { authenticate } = require("../middleware/auth");
+const { authLimiter } = require("../middleware/rateLimiter");
+const upload = require("../config/multer");
+const ProfilePhotoService = require("../services/profilePhotoService");
 
 /**
  * Middleware pour valider la photo de profil avant upload
@@ -32,11 +32,11 @@ const validateProfilePhoto = (req, res, next) => {
   }
 
   const validation = ProfilePhotoService.validateProfilePhoto(req.file);
-  
+
   if (!validation.valid) {
     return res.status(400).json({
       success: false,
-      message: validation.error
+      message: validation.error,
     });
   }
 
@@ -49,12 +49,12 @@ const validateProfilePhoto = (req, res, next) => {
  * @access  Public
  */
 router.post(
-  '/register',
+  "/register",
   authLimiter,
-  upload.single('photoProfil'),
+  upload.single("photoProfil"),
   validateProfilePhoto,
   validateRegistration,
-  AuthController.register
+  AuthController.register,
 );
 
 /**
@@ -62,34 +62,21 @@ router.post(
  * @desc    Connexion d'un utilisateur
  * @access  Public
  */
-router.post(
-  '/login',
-  authLimiter,
-  validateLogin,
-  AuthController.login
-);
+router.post("/login", authLimiter, validateLogin, AuthController.login);
 
 /**
  * @route   GET /api/auth/verify
  * @desc    Vérification du token JWT
  * @access  Private
  */
-router.get(
-  '/verify',
-  authenticate,
-  AuthController.verifyToken
-);
+router.get("/verify", authenticate, AuthController.verifyToken);
 
 /**
  * @route   POST /api/auth/refresh
  * @desc    Rafraîchissement du token JWT
  * @access  Private
  */
-router.post(
-  '/refresh',
-  authenticate,
-  AuthController.refreshToken
-);
+router.post("/refresh", authenticate, AuthController.refreshToken);
 
 /**
  * @route   POST /api/auth/check-status
@@ -97,10 +84,10 @@ router.post(
  * @access  Public
  */
 router.post(
-  '/check-status',
+  "/check-status",
   authLimiter,
   validateCheckStatus,
-  AuthController.checkStatus
+  AuthController.checkStatus,
 );
 
 module.exports = router;

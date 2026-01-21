@@ -2,29 +2,24 @@
  * ============================================
  * MESSAGE ROUTES - Routes messages
  * ============================================
- * 
+ *
  * @module routes/messages
  */
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const MessageController = require('../controllers/messageController');
-const { authenticate } = require('../middleware/auth');
-const { validateMessage } = require('../middleware/validation');
-const { uploadLimiter } = require('../middleware/rateLimiter');
-const upload = require('../config/multer');
+const MessageController = require("../controllers/messageController");
+const { authenticate } = require("../middleware/auth");
+const { validateMessage } = require("../middleware/validation");
+const { uploadLimiter } = require("../middleware/rateLimiter");
+const upload = require("../config/multer");
 
 /**
  * @route   POST /api/messages
  * @desc    Envoie un message texte
  * @access  Private
  */
-router.post(
-  '/',
-  authenticate,
-  validateMessage,
-  MessageController.sendMessage
-);
+router.post("/", authenticate, validateMessage, MessageController.sendMessage);
 
 /**
  * @route   POST /api/messages/image
@@ -32,11 +27,11 @@ router.post(
  * @access  Private
  */
 router.post(
-  '/image',
+  "/image",
   authenticate,
   uploadLimiter,
-  upload.single('image'),
-  MessageController.sendImage
+  upload.single("image"),
+  MessageController.sendImage,
 );
 
 /**
@@ -44,11 +39,7 @@ router.post(
  * @desc    Récupère tous les messages de l'utilisateur
  * @access  Private
  */
-router.get(
-  '/',
-  authenticate,
-  MessageController.getAllMessages
-);
+router.get("/", authenticate, MessageController.getAllMessages);
 
 /**
  * @route   GET /api/messages/conversation/:userId
@@ -56,9 +47,9 @@ router.get(
  * @access  Private
  */
 router.get(
-  '/conversation/:userId',
+  "/conversation/:userId",
   authenticate,
-  MessageController.getConversation
+  MessageController.getConversation,
 );
 
 /**
@@ -66,43 +57,27 @@ router.get(
  * @desc    Marque un message comme lu
  * @access  Private
  */
-router.put(
-  '/:id/read',
-  authenticate,
-  MessageController.markAsRead
-);
+router.put("/:id/read", authenticate, MessageController.markAsRead);
 
 /**
  * @route   PUT /api/messages/:id/view
  * @desc    Marque une image comme vue (démarre l'expiration)
  * @access  Private
  */
-router.put(
-  '/:id/view',
-  authenticate,
-  MessageController.markImageAsViewed
-);
+router.put("/:id/view", authenticate, MessageController.markImageAsViewed);
 
 /**
  * @route   POST /api/messages/:id/expire
  * @desc    Fait expirer une image manuellement
  * @access  Private
  */
-router.post(
-  '/:id/expire',
-  authenticate,
-  MessageController.expireImage
-);
+router.post("/:id/expire", authenticate, MessageController.expireImage);
 
 /**
  * @route   DELETE /api/messages/:id
  * @desc    Supprime un message
  * @access  Private
  */
-router.delete(
-  '/:id',
-  authenticate,
-  MessageController.deleteMessage
-);
+router.delete("/:id", authenticate, MessageController.deleteMessage);
 
 module.exports = router;
