@@ -7,8 +7,7 @@
     "start": "cd backend && npm start",
     "dev": "cd backend && npm run dev",
     "install:backend": "cd backend && npm install",
-    "install:frontend": "echo 'Frontend n a pas de dépendances npm'",
-    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:all": "npm install && npm run install:backend",
     "db:init": "cd backend && npm run db:init",
     "db:seed": "cd backend && npm run db:seed",
     "db:reset": "cd backend && npm run db:reset",
@@ -19,6 +18,9 @@
     "build": "echo 'Build process'",
     "clean": "rm -rf node_modules backend/node_modules"
   },
+  "workspaces": [
+    "backend"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Jeff-Dok/MessagerieApp.git"
@@ -49,7 +51,7 @@
     "npm": ">=6.0.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "nodemon": "^3.1.11"
   }
 }
