@@ -89,7 +89,7 @@ const handleMulterError = (err, req, res, next) => {
         return res.status(400).json({
           success: false,
           message: `Fichier trop volumineux. Taille maximale: ${PROFILE_PHOTO_CONFIG.MAX_SIZE / 1024 / 1024}MB`,
-        });
+      });
 
       case "LIMIT_FILE_COUNT":
         return res.status(400).json({
@@ -102,14 +102,14 @@ const handleMulterError = (err, req, res, next) => {
           success: false,
           message:
             'Champ de fichier inattendu. Utilisez "photoProfil" ou "image"',
-        });
+      });
 
       default:
         return res.status(400).json({
           success: false,
           message: "Erreur lors de l'upload",
           detail: err.message,
-        });
+      });
     }
   } else if (err) {
     // Autres erreurs (comme le fileFilter)

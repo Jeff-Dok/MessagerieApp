@@ -260,8 +260,8 @@ const User = sequelize.define(
       { fields: ["statut"] },
       { fields: ["ville"] },
       { fields: ["statut", "dateCreation"], where: { statut: "pending" } },
-    ],
-  }
+    ]
+  },
 );
 
 // ============================================

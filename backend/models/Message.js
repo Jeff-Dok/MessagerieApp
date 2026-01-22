@@ -151,8 +151,8 @@ const Message = sequelize.define(
         // Index composite pour les conversations
         fields: ["senderId", "receiverId"],
       },
-    ],
-  }
+    ]
+  },
 );
 
 /**
@@ -262,7 +262,7 @@ Message.findConversation = async function (userId1, userId2) {
       [Op.or]: [
         { senderId: userId1, receiverId: userId2 },
         { senderId: userId2, receiverId: userId1 },
-      ],
+      ]
     },
     order: [["date", "ASC"]],
     include: [
@@ -276,7 +276,7 @@ Message.findConversation = async function (userId1, userId2) {
         as: "receiver",
         attributes: ["id", "nom", "email"],
       },
-    ],
+    ]
   });
 };
 
@@ -294,8 +294,8 @@ Message.findExpiredImages = async function () {
       imageExpired: false,
       imageExpiresAt: {
         [Op.lte]: now,
-      },
-    }
+      }
+    },
   });
 };
 
@@ -309,7 +309,7 @@ Message.countUnreadForUser = async function (userId) {
     where: {
       receiverId: userId,
       read: false,
-    },
+    }
   });
 };
 

@@ -39,7 +39,7 @@ class UserController {
           [Op.or]: [
             { nom: { [Op.iLike]: `%${search}%` } },
             { email: { [Op.iLike]: `%${search}%` } },
-          ],
+          ]
         };
       }
 
@@ -216,7 +216,7 @@ class UserController {
           messagesReceived,
           unreadCount,
           totalMessages: messagesSent + messagesReceived,
-        },
+        }
       });
     } catch (error) {
       logger.error("Erreur lors de la récupération des statistiques:", error);

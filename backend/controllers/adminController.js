@@ -286,8 +286,8 @@ class AdminController {
             statut: USER_STATUS.APPROVED,
             dateValidation: {
               [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24h
-            },
-          }
+            }
+          },
         }),
       ]);
 
@@ -299,7 +299,7 @@ class AdminController {
           approved: approvedCount,
           rejected: rejectedCount,
           recentApprovals,
-        },
+        }
       });
     } catch (error) {
       logger.error("Erreur récupération stats admin:", error);

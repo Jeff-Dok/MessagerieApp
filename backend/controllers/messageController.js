@@ -54,7 +54,7 @@ class MessageController {
         include: [
           { model: User, as: "sender", attributes: ["id", "nom", "email"] },
           { model: User, as: "receiver", attributes: ["id", "nom", "email"] },
-        ],
+        ]
       });
 
       // Émettre via Socket.io
@@ -118,7 +118,7 @@ class MessageController {
         req.file.buffer,
         {
           addWatermark: true,
-        },
+        }
       );
 
       // Créer le message
@@ -139,7 +139,7 @@ class MessageController {
         include: [
           { model: User, as: "sender", attributes: ["id", "nom", "email"] },
           { model: User, as: "receiver", attributes: ["id", "nom", "email"] },
-        ],
+        ]
       });
 
       // Émettre via Socket.io
@@ -208,7 +208,7 @@ class MessageController {
           messageId: message.id,
           viewedAt: message.imageViewedAt,
           expiresAt: message.imageExpiresAt,
-        },
+        }
       );
 
       logger.info(`Image ${id} vue par utilisateur ${userId}`);

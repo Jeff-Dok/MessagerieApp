@@ -46,7 +46,7 @@ const sequelize = new Sequelize(
         ssl: {
           require: true,
           rejectUnauthorized: false,
-        },
+        }
       }),
 
       // Timezone
@@ -84,8 +84,8 @@ const sequelize = new Sequelize(
         /EHOSTUNREACH/,
         /EPIPE/,
         /EAI_AGAIN/,
-      ],
-    },
+      ]
+    }
   },
 );
 
