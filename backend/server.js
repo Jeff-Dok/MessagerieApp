@@ -36,7 +36,7 @@ const { startCleanupService } = require("./services/cleanupService");
 
 // Middleware
 const errorHandler = require("./middleware/errorHandler");
-const rateLimiter = require("./middleware/rateLimiter");
+const { limiter: rateLimiter } = require("./middleware/rateLimiter");
 
 // Routes
 const routes = require("./routes");
@@ -187,7 +187,7 @@ async function startServer() {
 
     // Synchronisation des modèles
     logger.info("Synchronisation des modèles...");
-    await sequelize.sync({ alter: process.env.NODE_ENV === "development" });
+    await sequelize.sync();
     logger.success("✅ Modèles synchronisés");
 
     // Initialiser Socket.io

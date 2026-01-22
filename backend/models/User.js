@@ -98,19 +98,19 @@ const User = sequelize.define(
 
     dateNaissance: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
+      allowNull: true,
       validate: {
-        notEmpty: { msg: "La date de naissance est requise" },
         isDate: { msg: "Format de date invalide" },
         isInPast(value) {
-          if (new Date(value) >= new Date()) {
+          if (value && new Date(value) >= new Date()) {
             throw new Error("La date de naissance doit être dans le passé");
           }
         },
         isOldEnough(value) {
+          if (!value) return;
           const birthDate = new Date(value);
           const today = new Date();
-          const age = today.getFullYear() - birthDate.getFullYear();
+          let age = today.getFullYear() - birthDate.getFullYear();
           const monthDiff = today.getMonth() - birthDate.getMonth();
 
           if (
@@ -132,9 +132,8 @@ const User = sequelize.define(
 
     ville: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
       validate: {
-        notEmpty: { msg: "La ville ne peut pas être vide" },
         len: {
           args: [2, 100],
           msg: "La ville doit contenir entre 2 et 100 caractères",
