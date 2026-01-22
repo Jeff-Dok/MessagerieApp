@@ -143,7 +143,7 @@ class SocketService {
     logger.info(`❌ Déconnexion Socket.io: ${socket.id}`);
 
     // Trouver et retirer l'utilisateur
-    for (let [userId, socketId] of connectedUsers.entries()) {
+    for (const [userId, socketId] of connectedUsers.entries()) {
       if (socketId === socket.id) {
         connectedUsers.delete(userId);
 

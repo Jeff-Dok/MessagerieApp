@@ -43,7 +43,7 @@ files.forEach((file) => {
       console.log(`✅ ${file} : Type correct (function)`);
     } else {
       console.log(`❌ ${file} : Type incorrect (${type})`);
-      console.log(`   Export :`, Object.keys(imported));
+      console.log("   Export :", Object.keys(imported));
     }
   } catch (error) {
     console.log(`❌ ${file} : Erreur d'import`);

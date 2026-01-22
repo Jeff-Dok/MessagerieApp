@@ -72,7 +72,7 @@ app.use(
   helmet({
     contentSecurityPolicy: false, // Désactivé pour Socket.io
     crossOriginEmbedderPolicy: false,
-  }),
+  })
 );
 
 // Compression des réponses
@@ -202,7 +202,7 @@ async function startServer() {
 
     // Démarrer le serveur
     server.listen(PORT, HOST, () => {
-      logger.success(`🚀 Serveur démarré avec succès`);
+      logger.success("🚀 Serveur démarré avec succès");
       logger.info(`📍 URL: http://${HOST}:${PORT}`);
       logger.info(`🔌 WebSocket: ws://${HOST}:${PORT}`);
       logger.info(`🌍 Environnement: ${process.env.NODE_ENV || "development"}`);

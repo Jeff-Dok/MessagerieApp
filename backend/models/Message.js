@@ -152,7 +152,7 @@ const Message = sequelize.define(
         fields: ["senderId", "receiverId"],
       },
     ],
-  },
+  }
 );
 
 /**
@@ -295,7 +295,7 @@ Message.findExpiredImages = async function () {
       imageExpiresAt: {
         [Op.lte]: now,
       },
-    },
+    }
   });
 };
 
