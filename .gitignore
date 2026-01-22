@@ -123,3 +123,9 @@ playwright-report/
 .wakatime-project
 .scannerwork/
 sonar-project.properties
+
+# Claude Code
+.claude/
+
+# Windows residual files
+nul
