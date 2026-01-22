@@ -114,6 +114,25 @@
         .char-counter.error {
             color: var(--color-error);
         }
+
+        /* Classe pour cacher visuellement tout en gardant accessible */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .label-optional {
+            font-weight: normal;
+            color: var(--text-tertiary);
+            font-size: var(--text-sm);
+        }
     </style>
 </head>
 <body class="auth-page">
@@ -150,15 +169,17 @@
                     <div class="form-group">
                         <label for="registerName" class="form-label">
                             <span class="label-text">Nom complet</span>
-                            <span class="label-required">*</span>
+                            <span class="label-required" aria-label="requis">*</span>
                         </label>
-                        <input 
-                            type="text" 
-                            id="registerName" 
+                        <input
+                            type="text"
+                            id="registerName"
                             name="nom"
-                            class="form-input" 
+                            class="form-input"
                             placeholder="Jean Dupont"
+                            autocomplete="name"
                             required
+                            aria-required="true"
                             minlength="2"
                             maxlength="100"
                         >
@@ -168,20 +189,23 @@
                     <div class="form-group">
                         <label for="registerPseudo" class="form-label">
                             <span class="label-text">Pseudo</span>
-                            <span class="label-required">*</span>
+                            <span class="label-required" aria-label="requis">*</span>
                         </label>
-                        <input 
-                            type="text" 
-                            id="registerPseudo" 
+                        <input
+                            type="text"
+                            id="registerPseudo"
                             name="pseudo"
-                            class="form-input" 
+                            class="form-input"
                             placeholder="jean_dupont"
+                            autocomplete="username"
                             required
+                            aria-required="true"
+                            aria-describedby="pseudoHelp"
                             minlength="3"
                             maxlength="50"
                             pattern="[a-zA-Z0-9_-]+"
                         >
-                        <small class="form-help">
+                        <small id="pseudoHelp" class="form-help">
                             3-50 caractères, lettres, chiffres, _ et - seulement
                         </small>
                     </div>
@@ -190,15 +214,17 @@
                     <div class="form-group">
                         <label for="registerEmail" class="form-label">
                             <span class="label-text">Email</span>
-                            <span class="label-required">*</span>
+                            <span class="label-required" aria-label="requis">*</span>
                         </label>
-                        <input 
-                            type="email" 
-                            id="registerEmail" 
+                        <input
+                            type="email"
+                            id="registerEmail"
                             name="email"
-                            class="form-input" 
+                            class="form-input"
                             placeholder="votre@email.com"
+                            autocomplete="email"
                             required
+                            aria-required="true"
                         >
                     </div>
 
@@ -206,18 +232,21 @@
                     <div class="form-group">
                         <label for="registerPassword" class="form-label">
                             <span class="label-text">Mot de passe</span>
-                            <span class="label-required">*</span>
+                            <span class="label-required" aria-label="requis">*</span>
                         </label>
-                        <input 
-                            type="password" 
-                            id="registerPassword" 
+                        <input
+                            type="password"
+                            id="registerPassword"
                             name="password"
-                            class="form-input" 
+                            class="form-input"
                             placeholder="••••••••"
+                            autocomplete="new-password"
                             required
+                            aria-required="true"
+                            aria-describedby="passwordHelp"
                             minlength="6"
                         >
-                        <small class="form-help">Minimum 6 caractères</small>
+                        <small id="passwordHelp" class="form-help">Minimum 6 caractères</small>
                     </div>
 
                     <button type="button" class="btn btn-primary btn-block" onclick="nextStep()">
@@ -233,32 +262,36 @@
                     <div class="form-group">
                         <label for="registerBirthdate" class="form-label">
                             <span class="label-text">Date de naissance</span>
-                            <span class="label-required">*</span>
+                            <span class="label-required" aria-label="requis">*</span>
                         </label>
-                        <input 
-                            type="date" 
-                            id="registerBirthdate" 
+                        <input
+                            type="date"
+                            id="registerBirthdate"
                             name="dateNaissance"
-                            class="form-input" 
+                            class="form-input"
                             required
+                            aria-required="true"
+                            aria-describedby="birthdateHelp"
                             max=""
                         >
-                        <small class="form-help">Vous devez avoir au moins 13 ans</small>
+                        <small id="birthdateHelp" class="form-help">Vous devez avoir au moins 13 ans</small>
                     </div>
 
                     <!-- Ville -->
                     <div class="form-group">
                         <label for="registerCity" class="form-label">
                             <span class="label-text">Ville de résidence</span>
-                            <span class="label-required">*</span>
+                            <span class="label-required" aria-label="requis">*</span>
                         </label>
-                        <input 
-                            type="text" 
-                            id="registerCity" 
+                        <input
+                            type="text"
+                            id="registerCity"
                             name="ville"
-                            class="form-input" 
+                            class="form-input"
                             placeholder="Montréal"
+                            autocomplete="address-level2"
                             required
+                            aria-required="true"
                             minlength="2"
                             maxlength="100"
                         >
@@ -268,49 +301,52 @@
                     <div class="form-group">
                         <label for="registerBio" class="form-label">
                             <span class="label-text">Brève description</span>
+                            <span class="label-optional">(optionnel)</span>
                         </label>
-                        <textarea 
-                            id="registerBio" 
+                        <textarea
+                            id="registerBio"
                             name="bio"
-                            class="form-input" 
+                            class="form-input"
                             placeholder="Parlez-nous un peu de vous..."
                             rows="4"
                             maxlength="500"
+                            aria-describedby="bioCounter"
                         ></textarea>
-                        <div id="bioCounter" class="char-counter">0 / 500 caractères</div>
+                        <div id="bioCounter" class="char-counter" aria-live="polite">0 / 500 caractères</div>
                     </div>
 
                     <div style="display: flex; gap: var(--spacing-3);">
-                        <button type="button" class="btn btn-secondary" onclick="prevStep()" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()" style="flex: 1;" aria-label="Retour à l'étape précédente">
                             Retour
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="nextStep()" style="flex: 1;">
+                        <button type="button" class="btn btn-primary" onclick="nextStep()" style="flex: 1;" aria-label="Continuer vers l'étape suivante">
                             Continuer
                         </button>
                     </div>
                 </div>
 
                 <!-- ÉTAPE 3: Photo de profil -->
-                <div class="form-step" data-step="3">
+                <div class="form-step" data-step="3" aria-label="Étape 3: Photo de profil">
                     <h2 class="text-lg font-semibold mb-4">Photo de profil</h2>
                     
                     <div class="photo-preview-container">
-                        <div class="photo-placeholder" onclick="document.getElementById('photoInput').click()">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <label for="photoInput" class="photo-placeholder" role="button" tabindex="0" aria-label="Choisir une photo de profil" onkeypress="if(event.key==='Enter')document.getElementById('photoInput').click()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                        </div>
-                        <img id="photoPreview" class="photo-preview" alt="Aperçu photo">
-                        <input 
-                            type="file" 
-                            id="photoInput" 
+                        </label>
+                        <img id="photoPreview" class="photo-preview" alt="Aperçu de votre photo de profil">
+                        <input
+                            type="file"
+                            id="photoInput"
                             name="photoProfil"
                             accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                            style="display: none;"
+                            class="visually-hidden"
+                            aria-describedby="photoHelp"
                             onchange="previewPhoto(this)"
                         >
-                        <p class="text-sm text-secondary" style="margin-top: var(--spacing-2);">
+                        <p id="photoHelp" class="text-sm text-secondary" style="margin-top: var(--spacing-2);">
                             Cliquez pour choisir une photo (max 5 MB)
                         </p>
                         <small class="form-help">Formats acceptés: JPG, PNG, GIF, WebP</small>

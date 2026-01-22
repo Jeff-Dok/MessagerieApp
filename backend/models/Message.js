@@ -249,22 +249,28 @@ Message.prototype.canBeDeletedBy = function (userId, userRole) {
  */
 
 /**
- * Trouve les messages d'une conversation
+ * Trouve les messages d'une conversation avec pagination
  * @param {number} userId1 - ID du premier utilisateur
  * @param {number} userId2 - ID du deuxième utilisateur
- * @returns {Promise<Message[]>} Messages de la conversation
+ * @param {Object} options - Options de pagination
+ * @param {number} [options.limit=50] - Nombre de messages par page
+ * @param {number} [options.offset=0] - Décalage pour la pagination
+ * @returns {Promise<{rows: Message[], count: number}>} Messages et total
  */
-Message.findConversation = async function (userId1, userId2) {
+Message.findConversation = async function (userId1, userId2, options = {}) {
   const { Op } = require("sequelize");
+  const { limit = 50, offset = 0 } = options;
 
-  return await this.findAll({
+  return await this.findAndCountAll({
     where: {
       [Op.or]: [
         { senderId: userId1, receiverId: userId2 },
         { senderId: userId2, receiverId: userId1 },
       ]
     },
-    order: [["date", "ASC"]],
+    order: [["date", "DESC"]],
+    limit,
+    offset,
     include: [
       {
         model: require("./User"),

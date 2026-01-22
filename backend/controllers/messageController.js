@@ -19,6 +19,43 @@ const { SocketService } = require("../services/socketService");
 const logger = require("../utils/logger");
 
 /**
+ * Vérifie qu'un message image existe et que l'utilisateur a les permissions
+ * @param {string} messageId - ID du message
+ * @param {number} userId - ID de l'utilisateur
+ * @param {Object} res - Objet response Express
+ * @returns {Promise<Message|null>} Le message si valide, null si erreur envoyée
+ */
+async function validateImageMessage(messageId, userId, res) {
+  const message = await Message.findByPk(messageId);
+
+  if (!message) {
+    res.status(HTTP_STATUS.NOT_FOUND).json({
+      success: false,
+      message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
+    });
+    return null;
+  }
+
+  if (!message.canBeViewedBy(userId)) {
+    res.status(HTTP_STATUS.FORBIDDEN).json({
+      success: false,
+      message: SERVER_MESSAGES.USER.ACCESS_DENIED,
+    });
+    return null;
+  }
+
+  if (message.messageType !== "image") {
+    res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: SERVER_MESSAGES.IMAGE.NOT_IMAGE,
+    });
+    return null;
+  }
+
+  return message;
+}
+
+/**
  * Contrôleur messages
  */
 class MessageController {
@@ -172,29 +209,9 @@ class MessageController {
       const { id } = req.params;
       const userId = req.user.userId;
 
-      const message = await Message.findByPk(id);
-      if (!message) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({
-          success: false,
-          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
-        });
-      }
-
-      // Vérifier les permissions
-      if (!message.canBeViewedBy(userId)) {
-        return res.status(HTTP_STATUS.FORBIDDEN).json({
-          success: false,
-          message: SERVER_MESSAGES.USER.ACCESS_DENIED,
-        });
-      }
-
-      // Vérifier que c'est une image
-      if (message.messageType !== "image") {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({
-          success: false,
-          message: SERVER_MESSAGES.IMAGE.NOT_IMAGE,
-        });
-      }
+      // Valider le message image
+      const message = await validateImageMessage(id, userId, res);
+      if (!message) return;
 
       // Marquer comme vue
       await message.markImageAsViewed();
@@ -234,28 +251,9 @@ class MessageController {
       const { id } = req.params;
       const userId = req.user.userId;
 
-      const message = await Message.findByPk(id);
-      if (!message) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({
-          success: false,
-          message: SERVER_MESSAGES.MESSAGE.NOT_FOUND,
-        });
-      }
-
-      // Vérifier les permissions
-      if (!message.canBeViewedBy(userId)) {
-        return res.status(HTTP_STATUS.FORBIDDEN).json({
-          success: false,
-          message: SERVER_MESSAGES.USER.ACCESS_DENIED,
-        });
-      }
-
-      if (message.messageType !== "image") {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({
-          success: false,
-          message: SERVER_MESSAGES.IMAGE.NOT_IMAGE,
-        });
-      }
+      // Valider le message image
+      const message = await validateImageMessage(id, userId, res);
+      if (!message) return;
 
       // Faire expirer
       await message.expireImage();
@@ -281,17 +279,25 @@ class MessageController {
   }
 
   /**
-   * Récupère une conversation
+   * Récupère une conversation avec pagination
    * @route GET /api/messages/conversation/:userId
+   * @query {number} page - Numéro de page (défaut: 1)
+   * @query {number} limit - Messages par page (défaut: 50, max: 100)
    */
   static async getConversation(req, res, next) {
     try {
       const { userId } = req.params;
       const currentUserId = req.user.userId;
 
-      const messages = await Message.findConversation(
+      // Pagination
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+      const offset = (page - 1) * limit;
+
+      const { rows: messages, count: total } = await Message.findConversation(
         currentUserId,
         parseInt(userId),
+        { limit, offset }
       );
 
       // Filtrer les images expirées
@@ -300,6 +306,10 @@ class MessageController {
       res.json({
         success: true,
         count: secureMessages.length,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
         messages: secureMessages,
       });
     } catch (error) {
@@ -309,15 +319,22 @@ class MessageController {
   }
 
   /**
-   * Récupère tous les messages de l'utilisateur
+   * Récupère tous les messages de l'utilisateur avec pagination
    * @route GET /api/messages
+   * @query {number} page - Numéro de page (défaut: 1)
+   * @query {number} limit - Messages par page (défaut: 50, max: 100)
    */
   static async getAllMessages(req, res, next) {
     try {
       const userId = req.user.userId;
       const { Op } = require("sequelize");
 
-      const messages = await Message.findAll({
+      // Pagination
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+      const offset = (page - 1) * limit;
+
+      const { rows: messages, count: total } = await Message.findAndCountAll({
         where: {
           [Op.or]: [{ senderId: userId }, { receiverId: userId }],
         },
@@ -326,6 +343,8 @@ class MessageController {
           { model: User, as: "receiver", attributes: ["id", "nom", "email"] },
         ],
         order: [["date", "DESC"]],
+        limit,
+        offset,
       });
 
       // Filtrer les images expirées
@@ -334,6 +353,10 @@ class MessageController {
       res.json({
         success: true,
         count: secureMessages.length,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
         messages: secureMessages,
       });
     } catch (error) {

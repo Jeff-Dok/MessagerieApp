@@ -41,11 +41,13 @@ const sequelize = new Sequelize(
 
     // Dialecte PostgreSQL
     dialectOptions: {
-      // SSL en production
-      ...(process.env.NODE_ENV === "production" && {
+      // SSL en production (configurable via DB_SSL)
+      ...(process.env.DB_SSL === "true" && {
         ssl: {
           require: true,
-          rejectUnauthorized: false,
+          // SÉCURITÉ: rejectUnauthorized devrait être true en production
+          // Mettre DB_SSL_REJECT_UNAUTHORIZED=false uniquement pour les certificats auto-signés
+          rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
         }
       }),
 

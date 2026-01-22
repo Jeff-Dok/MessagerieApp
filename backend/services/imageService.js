@@ -19,12 +19,67 @@ const { IMAGE_CONFIG } = require("../utils/constants");
 const logger = require("../utils/logger");
 
 /**
+ * Magic bytes (signatures) pour les formats d'images courants
+ */
+const IMAGE_SIGNATURES = {
+  jpeg: [
+    [0xff, 0xd8, 0xff, 0xe0], // JFIF
+    [0xff, 0xd8, 0xff, 0xe1], // EXIF
+    [0xff, 0xd8, 0xff, 0xe2], // ICC
+    [0xff, 0xd8, 0xff, 0xe8], // SPIFF
+    [0xff, 0xd8, 0xff, 0xdb], // Quantization table
+  ],
+  png: [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]],
+  gif: [
+    [0x47, 0x49, 0x46, 0x38, 0x37, 0x61], // GIF87a
+    [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], // GIF89a
+  ],
+  webp: [[0x52, 0x49, 0x46, 0x46]], // RIFF (suivi de WEBP)
+};
+
+/**
  * Service de gestion des images
  */
 class ImageService {
   /**
-   * Valide un fichier image
-   * @param {Object} file - Fichier uploadé
+   * Vérifie les magic bytes d'un buffer
+   * @param {Buffer} buffer - Buffer du fichier
+   * @returns {Object} Résultat avec le format détecté
+   */
+  static validateMagicBytes(buffer) {
+    if (!buffer || buffer.length < 8) {
+      return { valid: false, format: null, error: "Buffer invalide ou trop petit" };
+    }
+
+    // Vérifier chaque format
+    for (const [format, signatures] of Object.entries(IMAGE_SIGNATURES)) {
+      for (const signature of signatures) {
+        let match = true;
+        for (let i = 0; i < signature.length; i++) {
+          if (buffer[i] !== signature[i]) {
+            match = false;
+            break;
+          }
+        }
+        if (match) {
+          // Vérification supplémentaire pour WebP
+          if (format === "webp") {
+            const webpMarker = buffer.slice(8, 12).toString("ascii");
+            if (webpMarker !== "WEBP") {
+              continue;
+            }
+          }
+          return { valid: true, format };
+        }
+      }
+    }
+
+    return { valid: false, format: null, error: "Format de fichier non reconnu" };
+  }
+
+  /**
+   * Valide un fichier image (MIME type, taille et magic bytes)
+   * @param {Object} file - Fichier uploadé (avec buffer)
    * @returns {Object} Résultat de la validation
    */
   static validateImage(file) {
@@ -49,6 +104,39 @@ class ImageService {
         valid: false,
         error: `Fichier trop volumineux. Taille maximale: ${IMAGE_CONFIG.MAX_SIZE / 1024 / 1024}MB`,
       };
+    }
+
+    // Vérifier les magic bytes si le buffer est disponible
+    if (file.buffer) {
+      const magicValidation = this.validateMagicBytes(file.buffer);
+      if (!magicValidation.valid) {
+        logger.warn(
+          `Tentative d'upload avec magic bytes invalides. MIME déclaré: ${file.mimetype}`,
+        );
+        return {
+          valid: false,
+          error: "Le contenu du fichier ne correspond pas à une image valide",
+        };
+      }
+
+      // Vérifier la cohérence entre MIME et format détecté
+      const mimeToFormat = {
+        "image/jpeg": "jpeg",
+        "image/jpg": "jpeg",
+        "image/png": "png",
+        "image/gif": "gif",
+        "image/webp": "webp",
+      };
+      const expectedFormat = mimeToFormat[file.mimetype];
+      if (expectedFormat && magicValidation.format !== expectedFormat) {
+        logger.warn(
+          `Incohérence MIME/magic bytes. MIME: ${file.mimetype}, Format réel: ${magicValidation.format}`,
+        );
+        return {
+          valid: false,
+          error: "Le type MIME ne correspond pas au contenu du fichier",
+        };
+      }
     }
 
     return { valid: true };

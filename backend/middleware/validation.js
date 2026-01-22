@@ -295,7 +295,142 @@ const validateAdminSearch = [
   ...validatePagination,
 ];
 
+// ============================================
+// UTILITAIRES DE VALIDATION GÉNÉRIQUES
+// ============================================
+
+/**
+ * Crée une validation de champ texte avec options
+ * @param {string} fieldName - Nom du champ
+ * @param {Object} options - Options de validation
+ * @returns {ValidationChain} Chaîne de validation
+ */
+const createTextFieldValidation = (fieldName, options = {}) => {
+  const {
+    required = true,
+    minLength = 1,
+    maxLength = 255,
+    pattern = null,
+    patternMessage = "Format invalide",
+    customMessage = null,
+  } = options;
+
+  let validation = body(fieldName).trim();
+
+  if (required) {
+    validation = validation
+      .notEmpty()
+      .withMessage(customMessage || `${fieldName} est requis`);
+  } else {
+    validation = validation.optional();
+  }
+
+  validation = validation
+    .isLength({ min: minLength, max: maxLength })
+    .withMessage(
+      `${fieldName} doit contenir entre ${minLength} et ${maxLength} caractères`
+    );
+
+  if (pattern) {
+    validation = validation.matches(pattern).withMessage(patternMessage);
+  }
+
+  return validation;
+};
+
+/**
+ * Crée une validation d'email
+ * @param {string} fieldName - Nom du champ (défaut: "email")
+ * @param {boolean} required - Si le champ est requis
+ * @returns {ValidationChain} Chaîne de validation
+ */
+const createEmailValidation = (fieldName = "email", required = true) => {
+  let validation = body(fieldName).trim();
+
+  if (required) {
+    validation = validation.notEmpty().withMessage("L'email est requis");
+  } else {
+    validation = validation.optional();
+  }
+
+  return validation
+    .isEmail()
+    .withMessage("Format d'email invalide")
+    .normalizeEmail();
+};
+
+/**
+ * Crée une validation d'ID (param ou body)
+ * @param {string} fieldName - Nom du champ
+ * @param {string} location - 'param' ou 'body'
+ * @returns {ValidationChain} Chaîne de validation
+ */
+const createIdValidation = (fieldName = "id", location = "param") => {
+  const validator = location === "param" ? param : body;
+  return validator(fieldName)
+    .isInt({ min: 1 })
+    .withMessage(`${fieldName} doit être un entier positif`)
+    .toInt();
+};
+
+/**
+ * Crée une validation de tableau d'IDs
+ * @param {string} fieldName - Nom du champ
+ * @param {number} minItems - Nombre minimum d'éléments
+ * @returns {ValidationChain} Chaîne de validation
+ */
+const createIdArrayValidation = (fieldName, minItems = 1) => {
+  return body(fieldName)
+    .isArray({ min: minItems })
+    .withMessage(`${fieldName} doit être un tableau avec au moins ${minItems} élément(s)`)
+    .custom((value) => {
+      if (!value.every((id) => Number.isInteger(id) && id > 0)) {
+        throw new Error("Tous les IDs doivent être des entiers positifs");
+      }
+      return true;
+    });
+};
+
+/**
+ * Middleware de sanitisation générique
+ * Nettoie les entrées utilisateur courantes
+ */
+const sanitizeInput = (req, res, next) => {
+  // Sanitiser le body
+  if (req.body && typeof req.body === "object") {
+    for (const key of Object.keys(req.body)) {
+      if (typeof req.body[key] === "string") {
+        // Supprimer les espaces en début/fin
+        req.body[key] = req.body[key].trim();
+        // Supprimer les caractères de contrôle (sauf newline pour les textareas)
+        req.body[key] = req.body[key].replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+      }
+    }
+  }
+
+  // Sanitiser les query params
+  if (req.query && typeof req.query === "object") {
+    for (const key of Object.keys(req.query)) {
+      if (typeof req.query[key] === "string") {
+        req.query[key] = req.query[key].trim();
+      }
+    }
+  }
+
+  next();
+};
+
+/**
+ * Wrapper pour combiner plusieurs validations avec le handler d'erreurs
+ * @param {...ValidationChain} validations - Chaînes de validation
+ * @returns {Array} Tableau de middlewares
+ */
+const withValidation = (...validations) => {
+  return [...validations, handleValidationErrors];
+};
+
 module.exports = {
+  // Validations existantes
   validateRegistration,
   validateLogin,
   validateCheckStatus,
@@ -307,4 +442,12 @@ module.exports = {
   validatePagination,
   validateAdminSearch,
   handleValidationErrors,
+
+  // Nouveaux utilitaires génériques
+  createTextFieldValidation,
+  createEmailValidation,
+  createIdValidation,
+  createIdArrayValidation,
+  sanitizeInput,
+  withValidation,
 };
