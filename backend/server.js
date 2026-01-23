@@ -206,7 +206,7 @@ function startPhpServer() {
         // Le serveur PHP envoie ses logs dans stderr, donc on filtre
         if (message.includes("Development Server")) {
           logger.success(`✅ Serveur PHP démarré sur http://localhost:${PHP_PORT}`);
-          logger.info(`📊 Adminer disponible: http://localhost:${PHP_PORT}/adminer.php`);
+          logger.info(`📊 Adminer disponible: http://localhost:${PHP_PORT}/tools/adminer/adminer-login.php`);
           resolve();
         } else if (!message.includes("Listening on")) {
           logger.warn(`[PHP] ${message}`);

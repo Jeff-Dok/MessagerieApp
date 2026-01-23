@@ -17,7 +17,7 @@ timeout /t 2 /nobreak >nul
 echo.
 echo Demarrage du nouveau serveur PHP...
 echo.
-echo URL: http://localhost:8080/adminer.php
+echo URL: http://localhost:8080/tools/adminer/adminer-login.php
 echo.
 echo Configuration PostgreSQL:
 echo - Serveur: localhost:5432

@@ -1,12 +1,22 @@
 # Guide d'utilisation d'Adminer
 
-## 📖 Description
+## Description
 
-Adminer est un outil de gestion de base de données léger et puissant écrit en PHP. Il permet de gérer facilement votre base de données PostgreSQL via une interface web.
+Adminer est un outil de gestion de base de données leger et puissant ecrit en PHP. Il permet de gerer facilement votre base de donnees PostgreSQL via une interface web.
 
-## 🚀 Démarrage rapide
+## Demarrage rapide
 
-### Option 1: Via npm (recommandé)
+### Option 1: Automatique avec le backend (recommande)
+
+Adminer demarre automatiquement avec le serveur backend:
+
+```bash
+npm run dev
+```
+
+Le serveur PHP est lance sur le port 8080.
+
+### Option 2: Via npm (standalone)
 
 ```bash
 npm run adminer
@@ -18,118 +28,78 @@ ou
 npm run db:admin
 ```
 
-### Option 2: Via script batch (Windows)
-
-Double-cliquez sur le fichier `start-adminer.bat` à la racine du projet.
-
-### Option 3: Via script shell (Linux/Mac)
-
-```bash
-chmod +x start-adminer.sh
-./start-adminer.sh
-```
-
-### Option 4: Commande manuelle
+### Option 3: Commande manuelle
 
 ```bash
 php -S localhost:8080
 ```
 
-## 🌐 Accès à l'interface
+## Acces a l'interface
 
-Une fois le serveur démarré, ouvrez votre navigateur et accédez à:
+Une fois le serveur demarre, ouvrez votre navigateur et accedez a:
 
-- **Page de connexion simplifiée**: http://localhost:8080/adminer-login.php
-- **Adminer direct**: http://localhost:8080/adminer.php
+- **Page de connexion simplifiee**: http://localhost:8080/tools/adminer/adminer-login.php
+- **Adminer direct**: http://localhost:8080/tools/adminer/adminer.php
 
-## 🔐 Informations de connexion
+## Informations de connexion
 
-Les informations de connexion sont automatiquement chargées depuis votre fichier `.env`:
+Les informations de connexion sont automatiquement chargees depuis votre fichier `backend/.env`:
 
-- **Système**: PostgreSQL
+- **Systeme**: PostgreSQL
 - **Serveur**: localhost:5432
-- **Base de données**: messagerie_db
+- **Base de donnees**: messagerie_db
 - **Utilisateur**: postgres
-- **Mot de passe**: (celui défini dans `.env`)
 
-## 🎨 Thème sombre
+## Fonctionnalites principales
 
-Le fichier `adminer-dark.css` est automatiquement appliqué à Adminer pour un thème sombre.
+- **Parcourir les tables**: Visualisez vos tables et leurs donnees
+- **Executer des requetes SQL**: Ecrire et executer des requetes personnalisees
+- **Importer/Exporter**: Importer des donnees SQL ou exporter votre base
+- **Modifier les donnees**: Editer directement les enregistrements
+- **Gerer la structure**: Creer/modifier des tables et colonnes
+- **Visualiser les relations**: Voir les cles etrangeres et relations
 
-### Comment ça fonctionne
+## Configuration avancee
 
-Adminer charge automatiquement le fichier CSS du même nom que le fichier PHP mais avec l'extension `.css`. Donc:
-- `adminer.php` → `adminer.css` (chargé automatiquement)
+### Changer le port d'ecoute
 
-Le fichier `adminer-dark.css` a été renommé en `adminer.css` pour être appliqué automatiquement.
+Si le port 8080 est deja utilise, vous pouvez modifier la variable `PHP_PORT` dans votre fichier `.env`:
 
-Si vous voulez personnaliser davantage le thème:
-
-1. Éditez le fichier `adminer-dark.css`
-2. Assurez-vous qu'il soit nommé `adminer.css` ou créez un lien symbolique
-3. Rechargez la page Adminer
-
-## 📋 Fonctionnalités principales
-
-- **Parcourir les tables**: Visualisez vos tables et leurs données
-- **Exécuter des requêtes SQL**: Écrire et exécuter des requêtes personnalisées
-- **Importer/Exporter**: Importer des données SQL ou exporter votre base
-- **Modifier les données**: Éditer directement les enregistrements
-- **Gérer la structure**: Créer/modifier des tables et colonnes
-- **Visualiser les relations**: Voir les clés étrangères et relations
-
-## ⚙️ Configuration avancée
-
-### Changer le port d'écoute
-
-Si le port 8080 est déjà utilisé, vous pouvez changer le port:
-
-```bash
-php -S localhost:8888
+```env
+PHP_PORT=8888
 ```
 
-Puis accédez à: http://localhost:8888/adminer.php
+## Securite
 
-### Utiliser avec Docker (alternative)
+**IMPORTANT**: Adminer donne un acces complet a votre base de donnees.
 
-Si vous préférez utiliser Docker:
+### Recommandations de securite:
 
-```bash
-docker run -p 8080:8080 --network host adminer
-```
+1. Utilisez Adminer **uniquement en developpement local**
+2. **Ne jamais** deployer Adminer en production
+3. **Ne jamais** exposer Adminer sur Internet
+4. Supprimez le dossier `tools/adminer/` avant le deploiement en production
 
-## 🔒 Sécurité
+## Depannage
 
-⚠️ **IMPORTANT**: Adminer donne un accès complet à votre base de données.
+### Le serveur ne demarre pas
 
-### Recommandations de sécurité:
-
-1. ✅ Utilisez Adminer **uniquement en développement local**
-2. ❌ **Ne jamais** déployer Adminer en production
-3. ❌ **Ne jamais** exposer Adminer sur Internet
-4. ✅ Supprimez `adminer.php` avant le déploiement en production
-5. ✅ Ajoutez `adminer.php` au `.gitignore` si nécessaire
-
-## 🐛 Dépannage
-
-### Le serveur ne démarre pas
-
-**Problème**: PHP n'est pas installé ou non accessible
+**Probleme**: PHP n'est pas installe ou non accessible
 
 **Solution**:
 ```bash
-# Vérifier que PHP est installé
+# Verifier que PHP est installe
 php --version
 
-# Si PHP n'est pas trouvé, installez-le:
-# Windows: Téléchargez depuis https://windows.php.net/download/
+# Si PHP n'est pas trouve, installez-le:
+# Windows: Telechargez depuis https://windows.php.net/download/
 # Mac: brew install php
 # Linux: sudo apt install php-cli php-pgsql
 ```
 
-### Impossible de se connecter à PostgreSQL
+### Impossible de se connecter a PostgreSQL
 
-**Problème**: PostgreSQL n'est pas démarré
+**Probleme**: PostgreSQL n'est pas demarre
 
 **Solution**:
 ```bash
@@ -143,43 +113,28 @@ sudo systemctl start postgresql
 brew services start postgresql
 ```
 
-**Problème**: Extension pgsql manquante
+**Probleme**: Extension pgsql manquante
 
-**Solution**: Assurez-vous que l'extension PostgreSQL pour PHP est installée et activée dans `php.ini`:
+**Solution**: Assurez-vous que l'extension PostgreSQL pour PHP est installee et activee dans `php.ini`:
 ```ini
 extension=pdo_pgsql
 extension=pgsql
 ```
 
-### Le thème sombre ne s'applique pas
+### Port 8080 deja utilise
 
-**Solution**:
-1. Vérifiez que le fichier est nommé exactement `adminer.css` (pas `adminer-dark.css`)
-2. Videz le cache de votre navigateur (Ctrl+F5)
-3. Vérifiez que le fichier CSS est dans le même dossier que `adminer.php`
-
-### Port 8080 déjà utilisé
-
-**Solution**: Utilisez un autre port:
+**Solution**: Modifiez `PHP_PORT` dans votre fichier `.env` ou utilisez un autre port manuellement:
 ```bash
 php -S localhost:8888
 ```
 
-## 📚 Ressources
+## Ressources
 
 - [Documentation officielle Adminer](https://www.adminer.org/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Adminer sur GitHub](https://github.com/vrana/adminer)
 
-## 🆘 Support
-
-Pour toute question ou problème, consultez:
-1. Ce guide
-2. Les logs de votre serveur PostgreSQL
-3. Les logs du serveur PHP (affichés dans le terminal)
-4. La documentation de votre projet
-
 ---
 
-**Version**: 1.0.0
-**Dernière mise à jour**: 2026-01-22
+**Version**: 1.1.0
+**Derniere mise a jour**: 2026-01-22

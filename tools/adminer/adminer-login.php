@@ -32,14 +32,13 @@ function loadEnv($path) {
 }
 
 // Charger la configuration
-$env = loadEnv(__DIR__ . '/backend/.env');
+$env = loadEnv(__DIR__ . '/../../backend/.env');
 
 // Configuration PostgreSQL depuis .env
 $db_host = $env['DB_HOST'] ?? 'localhost';
 $db_port = $env['DB_PORT'] ?? '5432';
 $db_name = $env['DB_NAME'] ?? 'messagerie_db';
 $db_user = $env['DB_USER'] ?? 'postgres';
-$db_password = $env['DB_PASSWORD'] ?? '';
 
 ?>
 <!DOCTYPE html>
@@ -126,13 +125,6 @@ $db_password = $env['DB_PASSWORD'] ?? '';
             color: #333;
             font-family: 'Courier New', monospace;
             font-size: 14px;
-        }
-
-        .password-value {
-            background: #fff3cd;
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid #ffc107;
         }
 
         .btn-container {
@@ -231,20 +223,11 @@ $db_password = $env['DB_PASSWORD'] ?? '';
                     <span class="connection-label">Utilisateur:</span>
                     <span class="connection-value"><?php echo htmlspecialchars($db_user); ?></span>
                 </div>
-                <div class="connection-item">
-                    <span class="connection-label">Mot de passe:</span>
-                    <span class="connection-value password-value"><?php echo htmlspecialchars($db_password); ?></span>
-                </div>
             </div>
         </div>
 
-        <div class="theme-note">
-            <strong>🎨 Thème sombre activé!</strong><br>
-            Le fichier <code>adminer-dark.css</code> a été configuré pour personnaliser l'apparence d'Adminer.
-        </div>
-
         <div class="btn-container">
-            <a href="/adminer.php?pgsql=<?php echo urlencode($db_host . ':' . $db_port); ?>&username=<?php echo urlencode($db_user); ?>&db=<?php echo urlencode($db_name); ?>" class="btn btn-primary">
+            <a href="./adminer.php?pgsql=<?php echo urlencode($db_host . ':' . $db_port); ?>&username=<?php echo urlencode($db_user); ?>&db=<?php echo urlencode($db_name); ?>" class="btn btn-primary">
                 🚀 Ouvrir Adminer
             </a>
         </div>

@@ -1,60 +1,60 @@
-# Guide de Réinitialisation du Mot de Passe PostgreSQL
+# Guide de Reinitialisation du Mot de Passe PostgreSQL
 
-## Méthode 1: Via pgAdmin (LA PLUS SIMPLE)
+## Methode 1: Via pgAdmin
 
-1. Ouvrez **pgAdmin** (si installé)
+1. Ouvrez **pgAdmin** (si installe)
 2. Connectez-vous avec votre mot de passe actuel
-3. Dans l'arborescence de gauche, faites un clic droit sur **PostgreSQL** → **Servers** → votre serveur
-4. Allez dans **Login/Group Roles** → clic droit sur **postgres** → **Properties**
+3. Dans l'arborescence de gauche, faites un clic droit sur **PostgreSQL** > **Servers** > votre serveur
+4. Allez dans **Login/Group Roles** > clic droit sur **postgres** > **Properties**
 5. Allez dans l'onglet **Definition**
-6. Entrez le nouveau mot de passe: `1066703`
+6. Entrez le nouveau mot de passe
 7. Cliquez sur **Save**
 8. Fermez pgAdmin
 9. Relancez le serveur Node.js
 
-## Méthode 2: Via Adminer (RECOMMANDÉE)
+## Methode 2: Via Adminer (Recommandee)
 
-1. Démarrez le serveur PHP avec le fichier `start-adminer.bat`
-2. Ouvrez votre navigateur: http://localhost:8080/adminer.php
+1. Demarrez le serveur avec `npm run dev`
+2. Ouvrez votre navigateur: http://localhost:8080/tools/adminer/adminer-login.php
 3. Connectez-vous avec votre mot de passe actuel:
-   - Système: PostgreSQL
+   - Systeme: PostgreSQL
    - Serveur: localhost:5432
    - Utilisateur: postgres
    - Mot de passe: [votre mot de passe actuel]
-   - Base de données: postgres
-4. Une fois connecté, cliquez sur **Commande SQL** dans le menu
+   - Base de donnees: postgres
+4. Une fois connecte, cliquez sur **Commande SQL** dans le menu
 5. Copiez et collez cette commande:
    ```sql
-   ALTER USER postgres WITH PASSWORD '1066703';
+   ALTER USER postgres WITH PASSWORD 'nouveau_mot_de_passe';
    ```
-6. Cliquez sur **Exécuter**
+6. Cliquez sur **Executer**
 7. Fermez Adminer
 8. Relancez le serveur Node.js
 
-## Méthode 3: Via psql en ligne de commande
+## Methode 3: Via psql en ligne de commande
 
 1. Ouvrez l'invite de commandes Windows (cmd)
-2. Localisez votre installation PostgreSQL (généralement dans `C:\Program Files\PostgreSQL\XX\bin`)
-3. Exécutez la commande suivante (remplacez XX par votre version):
+2. Localisez votre installation PostgreSQL (generalement dans `C:\Program Files\PostgreSQL\XX\bin`)
+3. Executez la commande suivante (remplacez XX par votre version):
    ```bash
    "C:\Program Files\PostgreSQL\XX\bin\psql.exe" -U postgres -d postgres
    ```
-4. Entrez votre mot de passe actuel quand demandé
-5. Dans le terminal psql, exécutez:
+4. Entrez votre mot de passe actuel quand demande
+5. Dans le terminal psql, executez:
    ```sql
-   ALTER USER postgres WITH PASSWORD '1066703';
+   ALTER USER postgres WITH PASSWORD 'nouveau_mot_de_passe';
    \q
    ```
 6. Relancez le serveur Node.js
 
-## Méthode 4: Modification de pg_hba.conf (AVANCÉE)
+## Methode 4: Modification de pg_hba.conf (Avancee)
 
-**ATTENTION**: Cette méthode nécessite des droits administrateur.
+**ATTENTION**: Cette methode necessite des droits administrateur.
 
-1. Localisez le fichier `pg_hba.conf` (généralement dans `C:\Program Files\PostgreSQL\XX\data`)
+1. Localisez le fichier `pg_hba.conf` (generalement dans `C:\Program Files\PostgreSQL\XX\data`)
 2. Faites une copie de sauvegarde de ce fichier
-3. Ouvrez `pg_hba.conf` avec un éditeur de texte en tant qu'administrateur
-4. Trouvez les lignes qui ressemblent à:
+3. Ouvrez `pg_hba.conf` avec un editeur de texte en tant qu'administrateur
+4. Trouvez les lignes qui ressemblent a:
    ```
    host    all             all             127.0.0.1/32            scram-sha-256
    host    all             all             ::1/128                 scram-sha-256
@@ -65,35 +65,37 @@
    host    all             all             ::1/128                 trust
    ```
 6. Enregistrez le fichier
-7. Redémarrez le service PostgreSQL:
-   - Ouvrez les Services Windows (Win+R → `services.msc`)
+7. Redemarrez le service PostgreSQL:
+   - Ouvrez les Services Windows (Win+R > `services.msc`)
    - Trouvez "PostgreSQL"
-   - Clic droit → Redémarrer
-8. Exécutez le script SQL:
-   ```bash
-   psql -U postgres -d postgres -f reset-postgres-password.sql
-   ```
+   - Clic droit > Redemarrer
+8. Executez la commande SQL pour changer le mot de passe
 9. Restaurez pg_hba.conf (remettez `scram-sha-256`)
-10. Redémarrez à nouveau PostgreSQL
+10. Redemarrez a nouveau PostgreSQL
 11. Relancez le serveur Node.js
 
-## Après avoir changé le mot de passe
+## Apres avoir change le mot de passe
 
-Une fois le mot de passe changé, testez la connexion:
+Une fois le mot de passe change, testez la connexion:
 ```bash
-node backend/server.js
+npm run dev
 ```
 
 Vous devriez voir:
 ```
-✅ Connexion à la base de données réussie
-✅ Modèles synchronisés
-✅ Socket.io initialisé
-✅ Service de nettoyage démarré
-✅ Serveur PHP démarré sur http://localhost:8080
-🚀 Serveur démarré avec succès
+Connexion a la base de donnees reussie
+Modeles synchronises
+Socket.io initialise
+Service de nettoyage demarre
+Serveur PHP demarre sur http://localhost:8080
+Serveur demarre avec succes
 ```
 
 ## Si vous ne connaissez pas votre mot de passe actuel
 
-Utilisez la **Méthode 4** ci-dessus pour réinitialiser le mot de passe sans authentification.
+Utilisez la **Methode 4** ci-dessus pour reinitialiser le mot de passe sans authentification.
+
+---
+
+**Derniere mise a jour :** 2026-01-22
+**Version :** 1.1.0
