@@ -200,8 +200,27 @@
         /* Inverser les couleurs pour le mode sombre */
         --text-primary: var(--gray-50);
         --text-secondary: var(--gray-400);
+        --text-tertiary: var(--gray-500);
+        --text-inverse: var(--gray-900);
+
         --bg-primary: var(--gray-900);
         --bg-secondary: var(--gray-800);
+        --bg-tertiary: var(--gray-700);
+        --bg-hover: var(--gray-700);
+        --bg-active: var(--gray-600);
+
         --border-color: var(--gray-700);
+        --border-color-hover: var(--gray-600);
+
+        /* Adapter les gris pour les boutons en mode sombre */
+        --gray-200: var(--gray-700);
+        --gray-300: var(--gray-600);
+
+        /* Adapter la couleur primaire claire pour le mode sombre */
+        --color-primary-light: var(--primary-900);
+
+        /* Couleur primaire plus visible en mode sombre */
+        --color-primary: var(--primary-500);
+        --color-primary-hover: var(--primary-400);
     }
 }

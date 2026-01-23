@@ -154,7 +154,7 @@ class ImageService {
         maxWidth = IMAGE_CONFIG.MAX_WIDTH,
         maxHeight = IMAGE_CONFIG.MAX_HEIGHT,
         quality = IMAGE_CONFIG.QUALITY,
-        addWatermark = true,
+        addWatermark = false, // Désactiver le filigrane par défaut pour tester
       } = options;
 
       // Créer l'instance Sharp
@@ -166,6 +166,16 @@ class ImageService {
         `Image originale: ${metadata.width}x${metadata.height}, format: ${metadata.format}`,
       );
 
+      // Calculer les dimensions finales après redimensionnement
+      let finalWidth = metadata.width;
+      let finalHeight = metadata.height;
+
+      if (metadata.width > maxWidth || metadata.height > maxHeight) {
+        const ratio = Math.min(maxWidth / metadata.width, maxHeight / metadata.height);
+        finalWidth = Math.round(metadata.width * ratio);
+        finalHeight = Math.round(metadata.height * ratio);
+      }
+
       // Redimensionner si nécessaire
       image = image.resize(maxWidth, maxHeight, {
         fit: "inside",
@@ -174,28 +184,33 @@ class ImageService {
 
       // Ajouter un filigrane invisible si demandé
       if (addWatermark) {
-        const watermarkSvg = Buffer.from(`
-          <svg width="${maxWidth}" height="${maxHeight}">
-            <text 
-              x="50%" 
-              y="50%" 
-              text-anchor="middle" 
-              font-family="Arial" 
-              font-size="20" 
-              fill="white" 
-              opacity="0.05"
-            >
-              MessagerieApp - Protégé
-            </text>
-          </svg>
-        `);
+        try {
+          const watermarkSvg = Buffer.from(`
+            <svg width="${finalWidth}" height="${finalHeight}">
+              <text
+                x="50%"
+                y="50%"
+                text-anchor="middle"
+                font-family="Arial"
+                font-size="20"
+                fill="white"
+                opacity="0.05"
+              >
+                MessagerieApp
+              </text>
+            </svg>
+          `);
 
-        image = image.composite([
-          {
-            input: watermarkSvg,
-            blend: "over",
-          },
-        ]);
+          image = image.composite([
+            {
+              input: watermarkSvg,
+              blend: "over",
+            },
+          ]);
+        } catch (watermarkError) {
+          logger.warn("Erreur lors de l'ajout du filigrane, traitement sans filigrane:", watermarkError.message);
+          // Continue sans filigrane en cas d'erreur
+        }
       }
 
       // Convertir en JPEG et optimiser
@@ -207,8 +222,8 @@ class ImageService {
 
       return processedBuffer;
     } catch (error) {
-      logger.error("Erreur lors du traitement de l'image:", error);
-      throw new Error("Échec du traitement de l'image");
+      logger.error("Erreur lors du traitement de l'image:", error.message, error.stack);
+      throw new Error(`Échec du traitement de l'image: ${error.message}`);
     }
   }
 

@@ -127,6 +127,9 @@ const SERVER_MESSAGES = {
     PENDING_COUNT: "profils en attente de validation",
     NO_PENDING: "Aucun profil en attente",
     VALIDATION_REQUIRED: "Une raison est requise pour le rejet",
+    PROFILE_NOT_PENDING: "Ce profil n'est pas en attente de validation",
+    INVALID_ID_LIST: "Liste d'IDs invalide",
+    CANNOT_DELETE_SELF: "Vous ne pouvez pas supprimer votre propre compte",
   },
 
   // Erreurs générales

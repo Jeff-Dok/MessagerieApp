@@ -9,6 +9,7 @@
  */
 
 const { User } = require("../models");
+const { Op } = require("sequelize");
 const {
   HTTP_STATUS,
   SERVER_MESSAGES,
@@ -16,6 +17,7 @@ const {
 } = require("../utils/constants");
 const { SocketService } = require("../services/socketService");
 const logger = require("../utils/logger");
+const { generateProfileDefaults } = require("../utils/helpers");
 
 /**
  * Contrôleur administrateur
@@ -107,7 +109,7 @@ class AdminController {
       if (user.statut !== USER_STATUS.PENDING) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: "Ce profil n'est pas en attente de validation",
+          message: SERVER_MESSAGES.ADMIN.PROFILE_NOT_PENDING,
         });
       }
 
@@ -169,7 +171,7 @@ class AdminController {
       if (user.statut !== USER_STATUS.PENDING) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: "Ce profil n'est pas en attente de validation",
+          message: SERVER_MESSAGES.ADMIN.PROFILE_NOT_PENDING,
         });
       }
 
@@ -213,7 +215,7 @@ class AdminController {
       if (!Array.isArray(userIds) || userIds.length === 0) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
-          message: "Liste d'IDs invalide",
+          message: SERVER_MESSAGES.ADMIN.INVALID_ID_LIST,
         });
       }
 
@@ -268,7 +270,6 @@ class AdminController {
    */
   static async getAdminStats(req, res, next) {
     try {
-      const { Op } = require("sequelize");
 
       const [
         totalUsers,
@@ -314,7 +315,6 @@ class AdminController {
   static async searchUsers(req, res, next) {
     try {
       const { query, statut, ville, page = 1, limit = 20 } = req.query;
-      const { Op } = require("sequelize");
 
       const where = {};
 
@@ -353,6 +353,208 @@ class AdminController {
       });
     } catch (error) {
       logger.error("Erreur recherche utilisateurs:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Récupère les profils incomplets
+   * @route GET /api/admin/incomplete-profiles
+   */
+  static async getIncompleteProfiles(req, res, next) {
+    try {
+      const allUsers = await User.findAll({
+        attributes: ["id", "nom", "pseudo", "email", "ville", "dateNaissance", "bio", "statut"],
+      });
+
+      const incompleteProfiles = [];
+
+      for (const user of allUsers) {
+        const issues = [];
+
+        // Vérifier les champs obligatoires
+        if (!user.pseudo) issues.push("pseudo manquant");
+        if (!user.nom) issues.push("nom manquant");
+        if (!user.email) issues.push("email manquant");
+
+        // Vérifier les champs optionnels mais recommandés
+        if (!user.ville) issues.push("ville manquante");
+        if (!user.dateNaissance) issues.push("date de naissance manquante");
+
+        if (issues.length > 0) {
+          incompleteProfiles.push({
+            user: user.toAdminJSON(),
+            issues,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        count: incompleteProfiles.length,
+        profiles: incompleteProfiles,
+      });
+    } catch (error) {
+      logger.error("Erreur récupération profils incomplets:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Corrige un profil incomplet
+   * @route POST /api/admin/fix-profile/:id
+   */
+  static async fixProfile(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
+        });
+      }
+
+      // Générer des valeurs par défaut pour les champs manquants
+      const updates = generateProfileDefaults(user);
+
+      // Mettre à jour l'utilisateur si nécessaire
+      if (Object.keys(updates).length > 0) {
+        await user.update(updates);
+      }
+
+      logger.success(`Profil ${user.id} corrigé par admin ${req.user.userId}`);
+
+      res.json({
+        success: true,
+        message: "Profil corrigé avec succès",
+        updates: Object.keys(updates),
+        user: user.toAdminJSON(),
+      });
+    } catch (error) {
+      logger.error("Erreur correction profil:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Supprime un profil
+   * @route DELETE /api/admin/delete-profile/:id
+   */
+  static async deleteProfile(req, res, next) {
+    try {
+      const { id } = req.params;
+      const adminId = req.user.userId;
+
+      // Empêcher la suppression de son propre compte
+      if (parseInt(id) === adminId) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          message: SERVER_MESSAGES.ADMIN.CANNOT_DELETE_SELF,
+        });
+      }
+
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
+        });
+      }
+
+      await user.destroy();
+
+      logger.warn(`Profil ${user.pseudo} (ID: ${user.id}) supprimé par admin ${adminId}`);
+
+      res.json({
+        success: true,
+        message: "Profil supprimé avec succès",
+      });
+    } catch (error) {
+      logger.error("Erreur suppression profil:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Corrige tous les profils incomplets
+   * @route POST /api/admin/fix-all-profiles
+   */
+  static async fixAllProfiles(req, res, next) {
+    try {
+      const allUsers = await User.findAll();
+      let fixedCount = 0;
+
+      for (const user of allUsers) {
+        const updates = generateProfileDefaults(user);
+
+        if (Object.keys(updates).length > 0) {
+          await user.update(updates);
+          fixedCount++;
+        }
+      }
+
+      logger.success(
+        `${fixedCount} profils corrigés par admin ${req.user.userId}`,
+      );
+
+      res.json({
+        success: true,
+        fixed: fixedCount,
+        message: `${fixedCount} profil(s) corrigé(s) avec succès`,
+      });
+    } catch (error) {
+      logger.error("Erreur correction en masse:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Supprime plusieurs profils
+   * @route POST /api/admin/delete-profiles
+   */
+  static async deleteProfiles(req, res, next) {
+    try {
+      const { profileIds } = req.body;
+      const adminId = req.user.userId;
+
+      if (!Array.isArray(profileIds) || profileIds.length === 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          message: SERVER_MESSAGES.ADMIN.INVALID_ID_LIST,
+        });
+      }
+
+      // Empêcher la suppression de son propre compte
+      if (profileIds.includes(adminId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          message: SERVER_MESSAGES.ADMIN.CANNOT_DELETE_SELF,
+        });
+      }
+
+      const deletedCount = await User.destroy({
+        where: {
+          id: {
+            [Op.in]: profileIds,
+          },
+        },
+      });
+
+      logger.warn(
+        `${deletedCount} profils supprimés par admin ${adminId}`,
+      );
+
+      res.json({
+        success: true,
+        deleted: deletedCount,
+        message: `${deletedCount} profil(s) supprimé(s) avec succès`,
+      });
+    } catch (error) {
+      logger.error("Erreur suppression en masse:", error);
       next(error);
     }
   }

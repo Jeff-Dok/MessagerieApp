@@ -108,6 +108,7 @@ const ConversationList = {
   async selectConversation(user) {
     // Sauvegarder l'utilisateur sélectionné globalement
     window.currentSelectedUser = user;
+    window.selectedUser = user; // Synchroniser avec app.js
 
     // Mettre à jour l'UI
     this.updateActiveState(user.id);

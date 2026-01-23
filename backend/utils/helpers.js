@@ -135,6 +135,38 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Génère des valeurs par défaut pour les profils incomplets
+ * @param {Object} user - Objet utilisateur
+ * @returns {Object} Objet contenant les mises à jour à appliquer
+ */
+function generateProfileDefaults(user) {
+  const updates = {};
+
+  if (!user.pseudo) {
+    if (user.email) {
+      const emailPrefix = user.email.split("@")[0];
+      updates.pseudo = `user_${emailPrefix}_${user.id}`;
+    } else {
+      updates.pseudo = `user_${user.id}`;
+    }
+  }
+
+  if (!user.nom) {
+    updates.nom = user.pseudo || updates.pseudo || `Utilisateur ${user.id}`;
+  }
+
+  if (!user.email) {
+    updates.email = `user${user.id}@messagerie-app.local`;
+  }
+
+  if (!user.ville) {
+    updates.ville = "Non spécifié";
+  }
+
+  return updates;
+}
+
 module.exports = {
   formatDate,
   generateSlug,
@@ -146,4 +178,5 @@ module.exports = {
   getTimeRemaining,
   truncate,
   randomInt,
+  generateProfileDefaults,
 };

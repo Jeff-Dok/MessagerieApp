@@ -14,15 +14,24 @@
  * 
  * @module api
  * @author MessagerieApp
- * @version 2.0.0
+ * @version 3.1.0
  */
 
 /**
  * Configuration de l'API
+ * Utilise CONFIG global si disponible, sinon valeurs par défaut
  */
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:5000/api',
-  TIMEOUT: 30000, // 30 secondes
+  get BASE_URL() {
+    return (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL)
+      ? CONFIG.API_BASE_URL
+      : 'http://localhost:5000/api';
+  },
+  get TIMEOUT() {
+    return (typeof CONFIG !== 'undefined' && CONFIG.TIMEOUT?.API)
+      ? CONFIG.TIMEOUT.API
+      : 30000;
+  },
   HEADERS: {
     'Content-Type': 'application/json'
   }
@@ -259,7 +268,9 @@ const API = {
   logout() {
     this._setToken(null);
     localStorage.removeItem('currentUser');
-    window.location.href = '/login.html';
+    // Obtenir le répertoire de la page actuelle et ajouter login.html
+    const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+    window.location.href = currentDir + 'login.html';
   },
 
   // ==========================================

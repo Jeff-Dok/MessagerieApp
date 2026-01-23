@@ -16,20 +16,29 @@
  * @module socket
  * @requires socket.io-client
  * @author MessagerieApp
- * @version 2.0.0
+ * @version 3.1.0
  */
 
 /**
  * Configuration Socket.io
+ * Utilise CONFIG global si disponible, sinon valeurs par défaut
  */
 const SOCKET_CONFIG = {
-  URL: 'http://localhost:5000',
+  get URL() {
+    return (typeof CONFIG !== 'undefined' && CONFIG.SOCKET_URL)
+      ? CONFIG.SOCKET_URL
+      : 'http://localhost:5000';
+  },
   OPTIONS: {
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
-    timeout: 20000
+    get timeout() {
+      return (typeof CONFIG !== 'undefined' && CONFIG.TIMEOUT?.SOCKET)
+        ? CONFIG.TIMEOUT.SOCKET
+        : 20000;
+    }
   }
 };
 

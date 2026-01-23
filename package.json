@@ -1,11 +1,13 @@
 {
   "name": "messagerie-app",
-  "version": "2.0.0",
+  "version": "3.1.0",
   "description": "Application de messagerie sécurisée avec partage d'images et expiration automatique",
   "main": "backend/server.js",
   "scripts": {
     "start": "cd backend && npm start",
     "dev": "cd backend && npm run dev",
+    "adminer": "php -S localhost:8080 -t tools/adminer",
+    "db:admin": "npm run adminer",
     "install:backend": "cd backend && npm install",
     "install:all": "npm install && npm run install:backend",
     "db:init": "cd backend && npm run db:init",

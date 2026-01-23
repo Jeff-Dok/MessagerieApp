@@ -470,5 +470,5 @@ Merci à tous les contributeurs et utilisateurs de MessagerieApp!
 
 ---
 
-*Dernière mise à jour: 2026-01-21*  
-*Version du guide: 3.0.0*
+*Derniere mise a jour: 2026-01-22*  
+*Version du guide: 3.1.0*

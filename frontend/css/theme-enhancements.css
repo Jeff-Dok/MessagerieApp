@@ -1,0 +1,476 @@
+/**
+ * ============================================
+ * THEME ENHANCEMENTS - Améliorations visuelles
+ * ============================================
+ *
+ * Styles optimisés pour les modes clair et sombre
+ * Appliqué à toutes les pages de l'application
+ */
+
+/* ============================================
+   STYLES POUR LE MODE CLAIR - ULTRA DÉMARQUANT
+   ============================================ */
+@media (prefers-color-scheme: light) {
+    /* Arrière-plan global */
+    body {
+        background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    }
+
+    /* Conteneurs principaux */
+    .admin-container,
+    .fix-container,
+    .dashboard-container {
+        background-color: transparent;
+    }
+
+    /* Sections avec effet 3D */
+    .profile-table,
+    .profiles-section,
+    .conversations-panel,
+    .messages-panel {
+        background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
+        border: 3px solid #cbd5e1;
+        box-shadow:
+            0 10px 25px -5px rgba(0, 0, 0, 0.2),
+            0 8px 10px -6px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+        position: relative;
+    }
+
+    .profile-table::before,
+    .profiles-section::before {
+        content: '';
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -3px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border-radius: var(--border-radius-xl);
+        z-index: -1;
+        opacity: 0.15;
+    }
+
+    /* Cartes de statistiques */
+    .stat-card,
+    .profile-card {
+        background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
+        border: 2px solid #cbd5e1;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover,
+    .profile-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+        transform: translateY(-4px);
+    }
+
+    /* Tableaux */
+    .table th {
+        background: linear-gradient(to bottom, #f1f5f9 0%, #e2e8f0 100%);
+        color: #0f172a;
+        border-bottom: 3px solid #94a3b8;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: var(--spacing-4);
+        box-shadow: inset 0 -2px 0 0 rgba(59, 130, 246, 0.1);
+    }
+
+    .table td {
+        color: #1e293b;
+        border-bottom: 2px solid #e2e8f0;
+        padding: var(--spacing-4);
+        font-weight: 500;
+    }
+
+    .table tr:hover {
+        background: linear-gradient(to right, #eff6ff 0%, #dbeafe 100%);
+        transform: scale(1.01);
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Badges */
+    .badge-error {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #7f1d1d;
+        border: 2px solid #ef4444;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-warning {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #78350f;
+        border: 2px solid #f59e0b;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-success {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #064e3b;
+        border: 2px solid #10b981;
+        font-weight: 700;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Titres */
+    h1, h2, h3, .section-title, .panel-title {
+        color: #0f172a;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-table h2,
+    .section-header h2 {
+        border-bottom: 3px solid #3b82f6;
+        padding-bottom: var(--spacing-3);
+    }
+
+    /* Barre d'actions */
+    .actions-bar {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        padding: var(--spacing-4);
+        border-radius: var(--border-radius-lg);
+        border: 2px solid #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Boutons principaux */
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #ffffff;
+        border: 2px solid #1d4ed8;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+        transform: translateY(-2px);
+    }
+
+    /* Boutons secondaires */
+    .btn-secondary {
+        background: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
+        color: #0f172a;
+        border: 2px solid #94a3b8;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background: linear-gradient(to bottom, #e2e8f0 0%, #cbd5e1 100%);
+        border-color: #64748b;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    /* Boutons icônes */
+    .btn-icon {
+        border: 2px solid #cbd5e1;
+        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-icon:hover:not(:disabled) {
+        border-color: #3b82f6;
+        background: linear-gradient(to bottom, #eff6ff 0%, #dbeafe 100%);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+    }
+
+    /* Boutons désactivés */
+    .btn-primary:disabled,
+    .btn-secondary:disabled,
+    .btn-icon:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        filter: grayscale(0.5);
+    }
+
+    /* Conversations list */
+    .conversations-list .conversation-item {
+        border: 2px solid transparent;
+        background: linear-gradient(to right, #ffffff 0%, #fafbfc 100%);
+        transition: all 0.2s ease;
+    }
+
+    .conversations-list .conversation-item:hover {
+        border-color: #3b82f6;
+        background: linear-gradient(to right, #eff6ff 0%, #dbeafe 100%);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+        transform: translateX(4px);
+    }
+
+    .conversations-list .conversation-item.active {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Messages */
+    .message-bubble {
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .message-sent {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-color: #1d4ed8;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .message-received {
+        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+        border-color: #cbd5e1;
+    }
+
+    /* Inputs et forms */
+    .form-input,
+    .message-input,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea {
+        background: linear-gradient(to bottom, #ffffff 0%, #fafbfc 100%);
+        border: 2px solid #cbd5e1;
+        color: #0f172a;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease;
+    }
+
+    .form-input:focus,
+    .message-input:focus,
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1),
+                    inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+    }
+
+    /* Spinner / Loading */
+    .spinner {
+        border: 4px solid #e2e8f0;
+        border-top: 4px solid #3b82f6;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .loading {
+        color: #475569;
+        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-8);
+    }
+
+    /* Empty state */
+    .empty-state {
+        color: #64748b;
+        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+        padding: var(--spacing-8);
+        border-radius: var(--border-radius-lg);
+        border: 2px dashed #cbd5e1;
+    }
+
+    /* Valeurs NULL */
+    .null-value {
+        color: #dc2626;
+        font-weight: 800;
+        text-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
+        padding: 2px 6px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 4px;
+    }
+
+    /* Header */
+    .app-header {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-bottom: 3px solid #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Panel header */
+    .panel-header {
+        background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 2px solid #cbd5e1;
+    }
+
+    /* User role badge */
+    .user-role {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #78350f;
+        border: 2px solid #f59e0b;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    }
+}
+
+/* ============================================
+   STYLES POUR LE MODE SOMBRE - AMÉLIORÉS
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    /* Cartes et sections - légère amélioration */
+    .stat-card,
+    .profile-card {
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover,
+    .profile-card:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+        transform: translateY(-4px);
+    }
+
+    /* Boutons - effets hover améliorés */
+    .btn-primary:hover:not(:disabled) {
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .btn-icon:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Conversations hover */
+    .conversations-list .conversation-item:hover {
+        transform: translateX(4px);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Messages - ombres subtiles */
+    .message-sent {
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Inputs focus */
+    .form-input:focus,
+    .message-input:focus,
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+}
+
+/* ============================================
+   ALERTES - MODE CLAIR ET SOMBRE
+   ============================================ */
+.alert {
+    padding: var(--spacing-4);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-4);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+}
+
+.alert-warning {
+    background-color: rgba(251, 191, 36, 0.15);
+    border: 2px solid rgb(251, 191, 36);
+    color: rgb(217, 119, 6);
+}
+
+.alert-warning svg {
+    color: rgb(251, 191, 36);
+    flex-shrink: 0;
+}
+
+.alert-success {
+    background-color: rgba(34, 197, 94, 0.15);
+    border: 2px solid rgb(34, 197, 94);
+    color: rgb(22, 163, 74);
+}
+
+.alert-success svg {
+    color: rgb(34, 197, 94);
+    flex-shrink: 0;
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.15);
+    border: 2px solid rgb(59, 130, 246);
+    color: rgb(37, 99, 235);
+}
+
+.alert-info svg {
+    color: rgb(59, 130, 246);
+    flex-shrink: 0;
+}
+
+.alert-error {
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 2px solid rgb(239, 68, 68);
+    color: rgb(220, 38, 38);
+}
+
+.alert-error svg {
+    color: rgb(239, 68, 68);
+    flex-shrink: 0;
+}
+
+/* Mode sombre - texte des alertes plus clair */
+@media (prefers-color-scheme: dark) {
+    .alert-warning {
+        color: rgb(252, 211, 77);
+    }
+    .alert-success {
+        color: rgb(134, 239, 172);
+    }
+    .alert-info {
+        color: rgb(147, 197, 253);
+    }
+    .alert-error {
+        color: rgb(252, 165, 165);
+    }
+}
+
+/* ============================================
+   ANIMATIONS GLOBALES
+   ============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}

@@ -5,7 +5,7 @@
 API REST pour l'application de messagerie sécurisée avec support Socket.io pour temps réel.
 
 - **URL de base:** `http://localhost:5000/api`
-- **Version:** 3.0.0
+- **Version:** 3.1.0
 - **Format:** JSON
 - **Authentification:** JWT (Bearer Token)
 
@@ -783,4 +783,4 @@ Pour toute question ou problème:
 
 ---
 
-*Dernière mise à jour: 2026-01-21*
+*Derniere mise a jour: 2026-01-22*

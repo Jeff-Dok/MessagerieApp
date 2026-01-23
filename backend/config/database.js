@@ -51,9 +51,12 @@ const sequelize = new Sequelize(
         }
       }),
 
-      // Timezone
-      timezone: "UTC",
+      // Timezone - Utiliser le timezone local de l'OS
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
+
+    // Forcer le timezone local globalement
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 
     // Options de requête par défaut
     define: {

@@ -12,7 +12,7 @@
  * - Gestion automatique de l'expiration des images
  *
  * @author Votre Nom
- * @version 2.0.0
+ * @version 3.1.0
  */
 
 // ============================================
@@ -25,6 +25,7 @@ const compression = require("compression");
 const morgan = require("morgan");
 const http = require("http");
 const { Server } = require("socket.io");
+const { spawn } = require("child_process");
 require("dotenv").config();
 
 // Configurations
@@ -62,6 +63,10 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "localhost";
+const PHP_PORT = process.env.PHP_PORT || 8080;
+
+// Processus PHP
+let phpProcess = null;
 
 // ============================================
 // MIDDLEWARE
@@ -102,8 +107,9 @@ if (process.env.NODE_ENV === "development") {
 // Rate limiting
 app.use("/api/", rateLimiter);
 
-// Rendre Socket.io accessible dans les routes
+// Rendre Socket.io accessible dans les routes et globalement
 app.set("io", io);
+global.io = io;
 
 // ============================================
 // ROUTES
@@ -115,7 +121,7 @@ app.set("io", io);
 app.get("/", (req, res) => {
   res.json({
     name: "MessagerieApp API",
-    version: "2.0.0",
+    version: "3.1.0",
     status: "running",
     endpoints: {
       auth: "/api/auth",
@@ -172,6 +178,80 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // ============================================
+// SERVEUR PHP
+// ============================================
+
+/**
+ * Démarre le serveur PHP pour Adminer
+ */
+function startPhpServer() {
+  return new Promise((resolve, reject) => {
+    try {
+      logger.info(`Démarrage du serveur PHP sur le port ${PHP_PORT}...`);
+
+      // Démarrer le serveur PHP
+      phpProcess = spawn("php", ["-S", `localhost:${PHP_PORT}`], {
+        cwd: process.cwd(),
+        shell: true,
+      });
+
+      // Gérer la sortie standard
+      phpProcess.stdout.on("data", (data) => {
+        logger.info(`[PHP] ${data.toString().trim()}`);
+      });
+
+      // Gérer les erreurs
+      phpProcess.stderr.on("data", (data) => {
+        const message = data.toString().trim();
+        // Le serveur PHP envoie ses logs dans stderr, donc on filtre
+        if (message.includes("Development Server")) {
+          logger.success(`✅ Serveur PHP démarré sur http://localhost:${PHP_PORT}`);
+          logger.info(`📊 Adminer disponible: http://localhost:${PHP_PORT}/adminer.php`);
+          resolve();
+        } else if (!message.includes("Listening on")) {
+          logger.warn(`[PHP] ${message}`);
+        }
+      });
+
+      // Gérer la fermeture
+      phpProcess.on("close", (code) => {
+        if (code !== 0 && code !== null) {
+          logger.warn(`Processus PHP terminé avec le code ${code}`);
+        }
+      });
+
+      // Gérer les erreurs de démarrage
+      phpProcess.on("error", (error) => {
+        logger.error("Erreur lors du démarrage de PHP:", error.message);
+        reject(error);
+      });
+
+      // Timeout de 5 secondes pour résoudre la promesse
+      setTimeout(() => {
+        if (phpProcess && !phpProcess.killed) {
+          resolve();
+        }
+      }, 5000);
+
+    } catch (error) {
+      logger.error("Erreur lors du démarrage du serveur PHP:", error);
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Arrête le serveur PHP
+ */
+function stopPhpServer() {
+  if (phpProcess && !phpProcess.killed) {
+    logger.info("Arrêt du serveur PHP...");
+    phpProcess.kill();
+    phpProcess = null;
+  }
+}
+
+// ============================================
 // DÉMARRAGE DU SERVEUR
 // ============================================
 
@@ -200,6 +280,13 @@ async function startServer() {
     startCleanupService();
     logger.success("✅ Service de nettoyage démarré");
 
+    // Démarrer le serveur PHP
+    try {
+      await startPhpServer();
+    } catch (error) {
+      logger.warn("⚠️  Le serveur PHP n'a pas pu démarrer (non bloquant)");
+    }
+
     // Démarrer le serveur
     server.listen(PORT, HOST, () => {
       logger.success("🚀 Serveur démarré avec succès");
@@ -222,6 +309,9 @@ async function startServer() {
  */
 async function gracefulShutdown(signal) {
   logger.info(`\n${signal} reçu. Arrêt du serveur...`);
+
+  // Arrêter le serveur PHP
+  stopPhpServer();
 
   server.close(async () => {
     logger.info("Fermeture des connexions HTTP...");

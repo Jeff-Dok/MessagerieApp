@@ -22,7 +22,10 @@ const MessageRenderer = {
 
     messagesList.innerHTML = '';
 
-    messages.forEach(message => {
+    // Inverser l'ordre pour afficher du plus ancien au plus récent
+    const sortedMessages = [...messages].reverse();
+
+    sortedMessages.forEach(message => {
       this.addMessage(message, currentUserId);
     });
 
@@ -154,15 +157,16 @@ const MessageRenderer = {
     // Rendre l'image sur le canvas
     this.renderSecureImage(canvas, message.imageData);
 
-    // Marquer comme vue si c'est le destinataire
-    if (isReceiver && !message.imageViewedAt) {
-      this.markImageAsViewed(message.id, container);
-    }
+    // Ajouter le gestionnaire de clic sur le container pour afficher en grand
+    container.style.cursor = 'pointer';
+    container.addEventListener('click', () => {
+      // Ouvrir le modal avec l'image
+      this.showImageModal(message, currentUserId);
+    });
 
-    // Démarrer le timer si nécessaire
-    if (message.imageExpiresAt) {
-      this.startExpirationTimer(message.id, message.imageExpiresAt, container);
-    }
+    // NE PAS marquer comme vue automatiquement - seulement quand l'image est ouverte en grand
+
+    // NE PAS démarrer le timer automatiquement - seulement quand l'image est ouverte en grand
 
     return container;
   },
@@ -219,15 +223,21 @@ const MessageRenderer = {
       const response = await API.markImageAsViewed(messageId);
       if (response.success) {
         console.log(`Image ${messageId} vue, expiration dans 5 minutes`);
-        
-        // Retirer le badge "Nouvelle"
-        const badge = container.querySelector('.image-new-badge');
-        if (badge) {
-          badge.remove();
+
+        // Retirer le badge "Nouvelle" si container fourni
+        if (container) {
+          const badge = container.querySelector('.image-new-badge');
+          if (badge) {
+            badge.remove();
+          }
         }
+
+        return response; // Retourner la réponse avec expiresAt
       }
+      return null;
     } catch (error) {
       console.error('Erreur markImageAsViewed:', error);
+      return null;
     }
   },
 
@@ -311,6 +321,144 @@ const MessageRenderer = {
     if (messagesList) {
       messagesList.innerHTML = '';
     }
+  },
+
+  /**
+   * Affiche une image en mode plein écran dans un modal
+   * @param {Object} message - Message complet contenant l'image
+   * @param {number} currentUserId - ID de l'utilisateur actuel
+   */
+  showImageModal(message, currentUserId) {
+    // Supprimer le modal existant s'il y en a un
+    const existingModal = document.getElementById('imageModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    const isReceiver = message.receiverId === currentUserId;
+
+    // Créer le modal
+    const modal = document.createElement('div');
+    modal.id = 'imageModal';
+    modal.className = 'image-modal';
+    modal.dataset.messageId = message.id;
+    // Désactiver le clic droit sur le modal
+    modal.setAttribute('oncontextmenu', 'return false');
+    modal.innerHTML = `
+      <div class="image-modal-overlay"></div>
+      <div class="image-modal-content">
+        <button class="image-modal-close" aria-label="Fermer">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <div class="image-modal-header">
+          <span class="image-modal-filename">${message.imageFileName || 'Image'}</span>
+          <div class="image-modal-timer" id="modalTimer">⏱️ 5:00</div>
+        </div>
+        <div class="image-modal-body">
+          <img src="${message.imageData}" alt="${message.imageFileName || 'Image'}" class="image-modal-img" oncontextmenu="return false">
+        </div>
+      </div>
+    `;
+
+    // Ajouter au document
+    document.body.appendChild(modal);
+
+    // Animation d'entrée
+    setTimeout(() => {
+      modal.classList.add('active');
+    }, 10);
+
+    // Marquer comme vue si c'est le destinataire et pas encore vue
+    if (isReceiver && !message.imageViewedAt) {
+      this.markImageAsViewed(message.id, null).then((response) => {
+        if (response && response.expiresAt) {
+          // Mettre à jour l'objet message avec les nouvelles valeurs
+          message.imageViewedAt = response.viewedAt || new Date().toISOString();
+          message.imageExpiresAt = response.expiresAt;
+
+          // Démarrer le compte à rebours avec la date d'expiration du serveur
+          this.startModalTimer(response.expiresAt, modal);
+        }
+      });
+    } else if (message.imageViewedAt) {
+      // L'image a déjà été vue, calculer dynamiquement l'expiration
+      // à partir de imageViewedAt + 5 minutes pour éviter les problèmes de timezone
+      const viewedDate = new Date(message.imageViewedAt);
+      const calculatedExpiration = new Date(viewedDate.getTime() + 5 * 60 * 1000);
+
+      this.startModalTimer(calculatedExpiration.toISOString(), modal);
+    }
+
+    // Gestionnaires d'événements
+    const closeBtn = modal.querySelector('.image-modal-close');
+    const overlay = modal.querySelector('.image-modal-overlay');
+
+    const closeModal = () => {
+      modal.classList.remove('active');
+      setTimeout(() => {
+        modal.remove();
+      }, 300);
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', closeModal);
+
+    // Fermer avec la touche Échap
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+  },
+
+  /**
+   * Démarre le compte à rebours dans le modal
+   * @param {string} expiresAt - Date d'expiration ISO
+   * @param {HTMLElement} modal - Modal contenant le timer
+   */
+  startModalTimer(expiresAt, modal) {
+    const timerElement = modal.querySelector('#modalTimer');
+    if (!timerElement) return;
+
+    const expirationDate = new Date(expiresAt);
+
+    const updateTimer = () => {
+      const now = new Date();
+      const timeLeft = expirationDate - now;
+
+      if (timeLeft <= 0) {
+        timerElement.textContent = '⏱️ 0:00';
+        timerElement.style.color = '#EF4444';
+        // Fermer le modal et afficher l'image expirée
+        const closeBtn = modal.querySelector('.image-modal-close');
+        if (closeBtn) closeBtn.click();
+        return;
+      }
+
+      const minutes = Math.floor(timeLeft / 60000);
+      const seconds = Math.floor((timeLeft % 60000) / 1000);
+      const formatted = `⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+      timerElement.textContent = formatted;
+
+      // Changer la couleur selon le temps restant
+      if (timeLeft <= 30000) {
+        timerElement.style.color = '#EF4444'; // Rouge
+      } else if (timeLeft <= 60000) {
+        timerElement.style.color = '#F59E0B'; // Orange
+      } else {
+        timerElement.style.color = 'white';
+      }
+
+      setTimeout(updateTimer, 1000);
+    };
+
+    updateTimer();
   }
 };
 

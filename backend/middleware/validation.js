@@ -72,8 +72,7 @@ const validateRegistration = [
     .notEmpty()
     .withMessage("L'email est requis")
     .isEmail()
-    .withMessage("Format d'email invalide")
-    .normalizeEmail(),
+    .withMessage("Format d'email invalide"),
 
   body("password")
     .notEmpty()
@@ -82,11 +81,12 @@ const validateRegistration = [
     .withMessage("Le mot de passe doit contenir au moins 6 caractères"),
 
   body("dateNaissance")
-    .notEmpty()
-    .withMessage("La date de naissance est requise")
+    .optional()
     .isISO8601()
     .withMessage("Format de date invalide")
     .custom((value) => {
+      if (!value) return true;
+
       const birthDate = new Date(value);
       const today = new Date();
 
@@ -117,9 +117,8 @@ const validateRegistration = [
     }),
 
   body("ville")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("La ville est requise")
     .isLength({ min: 2, max: 100 })
     .withMessage("La ville doit contenir entre 2 et 100 caractères"),
 
@@ -143,8 +142,7 @@ const validateLogin = [
     .notEmpty()
     .withMessage("L'email est requis")
     .isEmail()
-    .withMessage("Format d'email invalide")
-    .normalizeEmail(),
+    .withMessage("Format d'email invalide"),
 
   body("password").notEmpty().withMessage("Le mot de passe est requis"),
 
@@ -160,8 +158,7 @@ const validateCheckStatus = [
     .notEmpty()
     .withMessage("L'email est requis")
     .isEmail()
-    .withMessage("Format d'email invalide")
-    .normalizeEmail(),
+    .withMessage("Format d'email invalide"),
 
   handleValidationErrors,
 ];

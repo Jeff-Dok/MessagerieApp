@@ -108,6 +108,7 @@ class App {
       }
 
       this.state.currentUser = user;
+      window.currentUser = user; // Exposer globalement pour les autres modules
       console.log('[App] Utilisateur chargé:', user.nom);
     } catch (error) {
       console.error('[App] Erreur loadCurrentUser:', error);
@@ -139,6 +140,11 @@ class App {
       if (roleElement) {
         roleElement.classList.remove('hidden');
       }
+      // Afficher le bouton administration
+      const adminButton = document.getElementById('adminButton');
+      if (adminButton) {
+        adminButton.classList.remove('hidden');
+      }
     }
 
     // Masquer l'état vide initial
@@ -158,6 +164,12 @@ class App {
     const logoutBtn = document.getElementById('logoutButton');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
+    }
+
+    // Bouton administration
+    const adminBtn = document.getElementById('adminButton');
+    if (adminBtn) {
+      adminBtn.addEventListener('click', () => this.handleAdminAccess());
     }
 
     // Envoi de message texte
@@ -294,6 +306,7 @@ class App {
   async selectConversation(user) {
     try {
       this.state.selectedUser = user;
+      window.selectedUser = user; // Exposer globalement pour les autres modules
 
       // Rejoindre la room Socket.io
       if (this.state.isSocketConnected) {
@@ -343,7 +356,8 @@ class App {
    * Gère l'envoi d'un message texte
    */
   async handleSendMessage() {
-    const { currentUser, selectedUser } = this.state;
+    const { currentUser } = this.state;
+    const selectedUser = this.state.selectedUser || window.selectedUser; // Fallback sur window.selectedUser
 
     if (!selectedUser) {
       Notifications.warning('Sélectionnez une conversation');
@@ -389,7 +403,7 @@ class App {
    * Gère le clic sur le bouton d'image
    */
   handleImageButtonClick() {
-    const { selectedUser } = this.state;
+    const selectedUser = this.state.selectedUser || window.selectedUser; // Fallback sur window.selectedUser
 
     if (!selectedUser) {
       Notifications.warning('Sélectionnez une conversation');
@@ -407,7 +421,8 @@ class App {
    * @param {Event} event - Événement de changement
    */
   async handleImageSelect(event) {
-    const { currentUser, selectedUser } = this.state;
+    const { currentUser } = this.state;
+    const selectedUser = this.state.selectedUser || window.selectedUser; // Fallback sur window.selectedUser
     const file = event.target.files[0];
 
     if (!file) return;
@@ -577,6 +592,15 @@ class App {
 
     // Déconnexion API
     API.logout();
+  }
+
+  /**
+   * Redirige vers la page d'administration
+   */
+  handleAdminAccess() {
+    // Obtenir le répertoire de la page actuelle et rediriger vers admin.html
+    const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+    window.location.href = currentDir + 'admin.html';
   }
 
   /**

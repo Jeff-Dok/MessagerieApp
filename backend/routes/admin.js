@@ -10,6 +10,7 @@ const express = require("express");
 const router = express.Router();
 const AdminController = require("../controllers/adminController");
 const { authenticate, isAdmin } = require("../middleware/auth");
+const { validateId, validateRejectProfile } = require("../middleware/validation");
 
 /**
  * Toutes les routes admin nécessitent authentification + rôle admin
@@ -36,21 +37,21 @@ router.get("/pending-count", AdminController.getPendingCount);
  * @desc    Récupère les détails d'un profil
  * @access  Private/Admin
  */
-router.get("/profile/:id", AdminController.getProfileDetails);
+router.get("/profile/:id", validateId, AdminController.getProfileDetails);
 
 /**
  * @route   POST /api/admin/approve/:id
  * @desc    Approuve un profil utilisateur
  * @access  Private/Admin
  */
-router.post("/approve/:id", AdminController.approveProfile);
+router.post("/approve/:id", validateId, AdminController.approveProfile);
 
 /**
  * @route   POST /api/admin/reject/:id
  * @desc    Rejette un profil utilisateur
  * @access  Private/Admin
  */
-router.post("/reject/:id", AdminController.rejectProfile);
+router.post("/reject/:id", validateRejectProfile, AdminController.rejectProfile);
 
 /**
  * @route   POST /api/admin/approve-bulk
@@ -72,5 +73,40 @@ router.get("/stats", AdminController.getAdminStats);
  * @access  Private/Admin
  */
 router.get("/search", AdminController.searchUsers);
+
+/**
+ * @route   GET /api/admin/incomplete-profiles
+ * @desc    Récupère tous les profils incomplets
+ * @access  Private/Admin
+ */
+router.get("/incomplete-profiles", AdminController.getIncompleteProfiles);
+
+/**
+ * @route   POST /api/admin/fix-profile/:id
+ * @desc    Corrige un profil incomplet
+ * @access  Private/Admin
+ */
+router.post("/fix-profile/:id", validateId, AdminController.fixProfile);
+
+/**
+ * @route   DELETE /api/admin/delete-profile/:id
+ * @desc    Supprime un profil
+ * @access  Private/Admin
+ */
+router.delete("/delete-profile/:id", validateId, AdminController.deleteProfile);
+
+/**
+ * @route   POST /api/admin/fix-all-profiles
+ * @desc    Corrige tous les profils incomplets
+ * @access  Private/Admin
+ */
+router.post("/fix-all-profiles", AdminController.fixAllProfiles);
+
+/**
+ * @route   POST /api/admin/delete-profiles
+ * @desc    Supprime plusieurs profils
+ * @access  Private/Admin
+ */
+router.post("/delete-profiles", AdminController.deleteProfiles);
 
 module.exports = router;
