@@ -95,17 +95,26 @@
             <aside class="conversations-panel" role="complementary" aria-label="Liste des conversations">
                 <!-- En-tête du panneau -->
                 <header class="panel-header">
-                    <h2 class="panel-title">
-                        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    <div class="panel-header-left">
+                        <h2 class="panel-title">
+                            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Conversations
+                        </h2>
+                        <!-- Compteur de messages non lus -->
+                        <span id="unreadCount" class="badge badge-error hidden" role="status" aria-label="messages non lus">0</span>
+                    </div>
+                    <!-- Bouton nouvelle conversation -->
+                    <button id="newConversationBtn" class="btn-new-conversation" title="Nouvelle conversation" aria-label="Nouvelle conversation">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
-                        Conversations
-                    </h2>
-                    <!-- Compteur de messages non lus -->
-                    <span id="unreadCount" class="badge badge-error hidden" role="status" aria-label="messages non lus">0</span>
+                    </button>
                 </header>
                 
                 <!-- Liste des conversations -->
@@ -239,6 +248,7 @@
     <script src="js/ui/messageRenderer.js"></script>
     <script src="js/ui/conversationList.js"></script>
     <script src="js/ui/notifications.js"></script>
+    <script src="js/utils/crypto.js"></script>
     <script src="js/app.js"></script>
     
     <!-- Protection contre le clic droit et captures d'écran -->
@@ -290,5 +300,35 @@
             }
         });
     </script>
+
+    <!-- Modal de recherche d'utilisateur -->
+    <div id="newConversationModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="modalTitle" class="modal-title">Nouvelle conversation</h3>
+                <button id="closeModalBtn" class="modal-close" aria-label="Fermer">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </header>
+            <div class="modal-body">
+                <!-- Champ de recherche -->
+                <div class="search-input-container">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="userSearchInput" class="search-input" placeholder="Rechercher par nom..." autocomplete="off">
+                </div>
+                <!-- Résultats de recherche -->
+                <div id="searchResults" class="search-results">
+                    <p class="search-hint">Tapez un nom pour rechercher des utilisateurs</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

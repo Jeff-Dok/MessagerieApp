@@ -10,6 +10,12 @@
  * @version 2.0.0
  */
 
+// Set pour tracker les images déjà notifiées comme expirées (évite les appels multiples)
+const notifiedExpiredImages = new Set();
+
+// Map pour stocker les intervalles de timer actifs (permet de les annuler lors du changement de conversation)
+const activeTimers = new Map();
+
 const MessageRenderer = {
   /**
    * Affiche une liste de messages dans le DOM
@@ -20,17 +26,65 @@ const MessageRenderer = {
     const messagesList = document.getElementById('messagesList');
     if (!messagesList) return;
 
+    // Nettoyer les timers actifs avant de réafficher les messages
+    this.clearAllTimers();
+
     messagesList.innerHTML = '';
 
     // Inverser l'ordre pour afficher du plus ancien au plus récent
     const sortedMessages = [...messages].reverse();
 
-    sortedMessages.forEach(message => {
-      this.addMessage(message, currentUserId);
+    // Compter les messages non lus (messages reçus par currentUserId qui ne sont pas lus)
+    const unreadMessages = sortedMessages.filter(msg =>
+      msg.receiverId === currentUserId && !msg.read
+    );
+    const unreadCount = unreadMessages.length;
+
+    // Trouver l'index du premier message non lu
+    let firstUnreadIndex = -1;
+    if (unreadCount > 0) {
+      firstUnreadIndex = sortedMessages.findIndex(msg =>
+        msg.receiverId === currentUserId && !msg.read
+      );
+    }
+
+    sortedMessages.forEach((message, index) => {
+      // Ajouter le séparateur avant le premier message non lu
+      if (index === firstUnreadIndex) {
+        this.addUnreadSeparator(messagesList, unreadCount);
+      }
+      this.addMessageToList(message, currentUserId, messagesList);
     });
 
     // Scroll automatique vers le bas
     this.scrollToBottom();
+  },
+
+  /**
+   * Ajoute un séparateur "Nouveaux Messages" dans la liste
+   * @param {HTMLElement} container - Container où ajouter le séparateur
+   * @param {number} count - Nombre de messages non lus
+   */
+  addUnreadSeparator(container, count) {
+    const separator = document.createElement('div');
+    separator.className = 'unread-separator';
+    separator.innerHTML = `
+      <div class="unread-separator-line"></div>
+      <span class="unread-separator-text">${count > 1 ? `${count} Nouveaux Messages` : 'Nouveau Message'}</span>
+      <div class="unread-separator-line"></div>
+    `;
+    container.appendChild(separator);
+  },
+
+  /**
+   * Nettoie tous les timers actifs
+   */
+  clearAllTimers() {
+    activeTimers.forEach((intervalId, messageId) => {
+      clearInterval(intervalId);
+    });
+    activeTimers.clear();
+    console.log('[MessageRenderer] Tous les timers ont été nettoyés');
   },
 
   /**
@@ -42,11 +96,21 @@ const MessageRenderer = {
     const messagesList = document.getElementById('messagesList');
     if (!messagesList) return;
 
-    const messageElement = this.createMessageElement(message, currentUserId);
-    messagesList.appendChild(messageElement);
+    this.addMessageToList(message, currentUserId, messagesList);
 
     // Scroll vers le bas après ajout
     this.scrollToBottom();
+  },
+
+  /**
+   * Ajoute un message à une liste spécifique
+   * @param {Object} message - Message à ajouter
+   * @param {number} currentUserId - ID de l'utilisateur actuel
+   * @param {HTMLElement} container - Container où ajouter le message
+   */
+  addMessageToList(message, currentUserId, container) {
+    const messageElement = this.createMessageElement(message, currentUserId);
+    container.appendChild(messageElement);
   },
 
   /**
@@ -78,6 +142,16 @@ const MessageRenderer = {
     if (message.messageType === 'image') {
       const imageContent = this.createImageContent(message, currentUserId);
       bubbleDiv.appendChild(imageContent);
+    } else if (message.decryptionFailed) {
+      // Message E2E non déchiffrable (clés perdues/changées)
+      const encryptedDiv = document.createElement('div');
+      encryptedDiv.className = 'message-encrypted-failed';
+      encryptedDiv.innerHTML = `
+        <div class="encrypted-icon">🔐</div>
+        <div class="encrypted-text">Message chiffré</div>
+        <div class="encrypted-subtitle">Impossible de déchiffrer (clés non disponibles)</div>
+      `;
+      bubbleDiv.appendChild(encryptedDiv);
     } else {
       const textDiv = document.createElement('div');
       textDiv.className = 'message-text';
@@ -135,21 +209,28 @@ const MessageRenderer = {
     filename.textContent = message.imageFileName || 'Image';
     overlay.appendChild(filename);
 
-    // Badge "Nouvelle" si pas encore vue
-    const isReceiver = message.receiverId === currentUserId;
-    if (isReceiver && !message.imageViewedAt) {
-      const badge = document.createElement('div');
-      badge.className = 'image-new-badge';
-      badge.textContent = 'Nouvelle';
-      container.appendChild(badge);
-    }
+    // Timer d'expiration sur l'image (visible pour sender et receiver)
+    const timer = document.createElement('div');
+    timer.className = 'image-timer-badge';
+    timer.id = `timer-${message.id}`;
+    container.appendChild(timer);
 
-    // Timer d'expiration
-    if (message.imageExpiresAt) {
-      const timer = document.createElement('div');
-      timer.className = 'expiration-timer';
-      timer.dataset.expires = message.imageExpiresAt;
-      container.appendChild(timer);
+    // Si l'image a été vue, afficher le timer
+    if (message.imageViewedAt && message.imageExpiresAt) {
+      // Utiliser setTimeout pour s'assurer que l'élément est dans le DOM avant de démarrer le timer
+      const messageId = message.id;
+      const expiresAt = message.imageExpiresAt;
+      setTimeout(() => {
+        this.startImageTimer(messageId, expiresAt);
+      }, 0);
+    } else if (message.receiverId === currentUserId) {
+      // Badge "Nouvelle" seulement si pas encore vue ET c'est le receiver
+      timer.textContent = '🆕 Nouvelle';
+      timer.style.background = 'linear-gradient(135deg, #8B5CF6, #6366F1)';
+    } else {
+      // Sender: image pas encore vue
+      timer.textContent = '👁️ Non vue';
+      timer.style.background = 'linear-gradient(135deg, #6B7280, #4B5563)';
     }
 
     container.appendChild(overlay);
@@ -160,13 +241,14 @@ const MessageRenderer = {
     // Ajouter le gestionnaire de clic sur le container pour afficher en grand
     container.style.cursor = 'pointer';
     container.addEventListener('click', () => {
+      // Vérifier si l'image est expirée avant d'ouvrir le modal
+      if (container.classList.contains('image-expired') || notifiedExpiredImages.has(String(message.id))) {
+        console.log('[MessageRenderer] Image expirée, ouverture du modal bloquée');
+        return;
+      }
       // Ouvrir le modal avec l'image
       this.showImageModal(message, currentUserId);
     });
-
-    // NE PAS marquer comme vue automatiquement - seulement quand l'image est ouverte en grand
-
-    // NE PAS démarrer le timer automatiquement - seulement quand l'image est ouverte en grand
 
     return container;
   },
@@ -280,6 +362,10 @@ const MessageRenderer = {
    * @param {HTMLElement} container - Container de l'image
    */
   expireImageInUI(messageId, container) {
+    // Marquer le container comme expiré pour bloquer les clics
+    container.classList.add('image-expired');
+    container.style.cursor = 'default';
+
     container.innerHTML = `
       <div class="message-expired">
         <div class="expired-icon">🔒</div>
@@ -287,7 +373,7 @@ const MessageRenderer = {
         <div class="expired-subtitle">Cette image n'est plus disponible</div>
       </div>
     `;
-    
+
     console.log(`Image ${messageId} expirée dans l'UI`);
   },
 
@@ -329,6 +415,12 @@ const MessageRenderer = {
    * @param {number} currentUserId - ID de l'utilisateur actuel
    */
   showImageModal(message, currentUserId) {
+    // Vérifier si l'image est expirée
+    if (message.imageExpired || notifiedExpiredImages.has(String(message.id))) {
+      console.log('[MessageRenderer] Image expirée, modal non ouvert');
+      return;
+    }
+
     // Supprimer le modal existant s'il y en a un
     const existingModal = document.getElementById('imageModal');
     if (existingModal) {
@@ -381,6 +473,9 @@ const MessageRenderer = {
 
           // Démarrer le compte à rebours avec la date d'expiration du serveur
           this.startModalTimer(response.expiresAt, modal);
+
+          // Démarrer aussi le timer sur l'image dans la conversation
+          this.startImageTimer(message.id, response.expiresAt);
         }
       });
     } else if (message.imageViewedAt) {
@@ -426,6 +521,8 @@ const MessageRenderer = {
     if (!timerElement) return;
 
     const expirationDate = new Date(expiresAt);
+    const messageId = modal.dataset.messageId;
+    let hasExpired = false;
 
     const updateTimer = () => {
       const now = new Date();
@@ -434,7 +531,17 @@ const MessageRenderer = {
       if (timeLeft <= 0) {
         timerElement.textContent = '⏱️ 0:00';
         timerElement.style.color = '#EF4444';
-        // Fermer le modal et afficher l'image expirée
+
+        // Éviter les appels multiples
+        if (!hasExpired) {
+          hasExpired = true;
+          // Expirer l'image dans la liste des messages
+          this.expireImageById(messageId);
+          // Notifier le serveur et l'autre utilisateur
+          this.notifyImageExpired(messageId);
+        }
+
+        // Fermer le modal
         const closeBtn = modal.querySelector('.image-modal-close');
         if (closeBtn) closeBtn.click();
         return;
@@ -459,6 +566,156 @@ const MessageRenderer = {
     };
 
     updateTimer();
+  },
+
+  /**
+   * Expire une image par son ID de message (affiche "Image expirée")
+   * @param {number|string} messageId - ID du message
+   */
+  expireImageById(messageId) {
+    // Marquer comme notifiée pour éviter les appels API en double
+    notifiedExpiredImages.add(String(messageId));
+
+    // Trouver le container de l'image et afficher "Image expirée"
+    const container = document.querySelector(`.message-image-container[data-message-id="${messageId}"]`);
+    if (container) {
+      this.expireImageInUI(messageId, container);
+      console.log(`[MessageRenderer] Image ${messageId} marquée comme expirée`);
+    }
+  },
+
+  /**
+   * Supprime un message du DOM par son ID
+   * @param {number|string} messageId - ID du message
+   */
+  removeMessageById(messageId) {
+    const messageElement = document.querySelector(`.message[data-message-id="${messageId}"]`);
+    if (messageElement) {
+      messageElement.remove();
+      console.log(`[MessageRenderer] Message ${messageId} supprimé du DOM`);
+    }
+  },
+
+  /**
+   * Démarre le compte à rebours sur l'image dans la conversation
+   * @param {number|string} messageId - ID du message
+   * @param {string} expiresAt - Date d'expiration ISO
+   */
+  startImageTimer(messageId, expiresAt) {
+    const msgId = String(messageId);
+
+    // Si un timer existe déjà pour ce message, le nettoyer d'abord
+    if (activeTimers.has(msgId)) {
+      clearInterval(activeTimers.get(msgId));
+      activeTimers.delete(msgId);
+    }
+
+    const timerElement = document.getElementById(`timer-${messageId}`);
+    if (!timerElement) {
+      console.warn(`[MessageRenderer] Timer element not found for message ${messageId}`);
+      return;
+    }
+
+    const expirationDate = new Date(expiresAt);
+    let hasExpired = false;
+
+    const updateTimer = () => {
+      // Vérifier si l'élément existe encore dans le DOM
+      const currentElement = document.getElementById(`timer-${messageId}`);
+      if (!currentElement) {
+        // L'élément n'existe plus, arrêter le timer
+        if (activeTimers.has(msgId)) {
+          clearInterval(activeTimers.get(msgId));
+          activeTimers.delete(msgId);
+        }
+        return;
+      }
+
+      const now = new Date();
+      const timeLeft = expirationDate - now;
+
+      if (timeLeft <= 0) {
+        currentElement.textContent = '⏱️ 0:00';
+        currentElement.style.background = 'linear-gradient(135deg, #EF4444, #DC2626)';
+
+        // Arrêter l'intervalle
+        if (activeTimers.has(msgId)) {
+          clearInterval(activeTimers.get(msgId));
+          activeTimers.delete(msgId);
+        }
+
+        // Éviter les appels multiples
+        if (!hasExpired) {
+          hasExpired = true;
+          // Marquer l'image comme expirée localement
+          this.expireImageById(messageId);
+          // Appeler l'API pour notifier le serveur et l'autre utilisateur
+          this.notifyImageExpired(messageId);
+        }
+        return;
+      }
+
+      const minutes = Math.floor(timeLeft / 60000);
+      const seconds = Math.floor((timeLeft % 60000) / 1000);
+      currentElement.textContent = `⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+      // Changer la couleur selon le temps restant
+      if (timeLeft <= 30000) {
+        currentElement.style.background = 'linear-gradient(135deg, #EF4444, #DC2626)'; // Rouge
+      } else if (timeLeft <= 60000) {
+        currentElement.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)'; // Orange
+      } else {
+        currentElement.style.background = 'linear-gradient(135deg, #10B981, #059669)'; // Vert
+      }
+    };
+
+    // Exécuter immédiatement, puis toutes les secondes
+    updateTimer();
+    const intervalId = setInterval(updateTimer, 1000);
+    activeTimers.set(msgId, intervalId);
+
+    console.log(`[MessageRenderer] Timer démarré pour image ${messageId}`);
+  },
+
+  /**
+   * Notifie le serveur qu'une image a expiré (pour synchroniser les deux utilisateurs)
+   * @param {number|string} messageId - ID du message
+   */
+  async notifyImageExpired(messageId) {
+    // Éviter les appels multiples pour la même image
+    const msgId = String(messageId);
+    if (notifiedExpiredImages.has(msgId)) {
+      console.log(`[MessageRenderer] Image ${messageId} déjà notifiée, ignoré`);
+      return;
+    }
+
+    // Marquer comme notifiée immédiatement pour éviter les doublons
+    notifiedExpiredImages.add(msgId);
+
+    try {
+      // Appeler l'API pour expirer l'image côté serveur
+      // Cela enverra une notification socket à l'autre utilisateur
+      if (typeof API !== 'undefined' && API.expireImage) {
+        await API.expireImage(messageId);
+        console.log(`[MessageRenderer] Notification d'expiration envoyée pour image ${messageId}`);
+      }
+    } catch (error) {
+      // Ignorer les erreurs (l'image peut déjà être expirée)
+      console.log(`[MessageRenderer] L'image ${messageId} était peut-être déjà expirée`);
+    }
+  },
+
+  /**
+   * Met à jour le badge d'une image quand elle est vue (pour le sender)
+   * @param {number|string} messageId - ID du message
+   * @param {string} expiresAt - Date d'expiration ISO
+   */
+  updateImageViewedStatus(messageId, expiresAt) {
+    const timerElement = document.getElementById(`timer-${messageId}`);
+    if (timerElement) {
+      // Démarrer le timer
+      this.startImageTimer(messageId, expiresAt);
+    }
   }
 };
 

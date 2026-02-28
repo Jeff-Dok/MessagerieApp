@@ -26,6 +26,7 @@ const morgan = require("morgan");
 const http = require("http");
 const { Server } = require("socket.io");
 const { spawn } = require("child_process");
+const path = require("path");
 require("dotenv").config();
 
 // Configurations
@@ -34,6 +35,7 @@ const { sequelize } = require("./config/database");
 // Services
 const { initializeSocketService } = require("./services/socketService");
 const { startCleanupService } = require("./services/cleanupService");
+const { encryptionService } = require("./services/encryptionService");
 
 // Middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -51,12 +53,30 @@ const { SERVER_MESSAGES } = require("./utils/constants");
 // ============================================
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+
+// Configuration CORS avec support multi-origines
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim())
+  : [process.env.CORS_ORIGIN || "http://localhost:3000"];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permettre les requêtes sans origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS bloqué pour origin: ${origin}`);
+      callback(null, true); // En dev, permettre quand même
+    }
   },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+const io = new Server(server, {
+  cors: corsOptions,
   pingTimeout: parseInt(process.env.SOCKET_PING_TIMEOUT) || 60000,
   pingInterval: parseInt(process.env.SOCKET_PING_INTERVAL) || 25000,
 });
@@ -83,15 +103,8 @@ app.use(
 // Compression des réponses
 app.use(compression());
 
-// CORS
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+// CORS avec multi-origines
+app.use(cors(corsOptions));
 
 // Parsing du body
 app.use(express.json({ limit: "10mb" }));
@@ -189,9 +202,10 @@ function startPhpServer() {
     try {
       logger.info(`Démarrage du serveur PHP sur le port ${PHP_PORT}...`);
 
-      // Démarrer le serveur PHP
+      // Démarrer le serveur PHP (dans le dossier racine du projet pour accéder à tools/)
+      const projectRoot = path.join(__dirname, "..");
       phpProcess = spawn("php", ["-S", `localhost:${PHP_PORT}`], {
-        cwd: process.cwd(),
+        cwd: projectRoot,
         shell: true,
       });
 
@@ -269,6 +283,15 @@ async function startServer() {
     logger.info("Synchronisation des modèles...");
     await sequelize.sync();
     logger.success("✅ Modèles synchronisés");
+
+    // Initialiser le service de chiffrement
+    logger.info("Initialisation du service de chiffrement...");
+    encryptionService.initialize();
+    if (encryptionService.isEnabled()) {
+      logger.success("✅ Service de chiffrement activé (AES-256-GCM)");
+    } else {
+      logger.warn("⚠️  Service de chiffrement désactivé (ENCRYPTION_KEY non définie)");
+    }
 
     // Initialiser Socket.io
     logger.info("Initialisation de Socket.io...");

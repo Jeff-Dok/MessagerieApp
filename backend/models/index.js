@@ -10,8 +10,10 @@
 
 const User = require("./User");
 const Message = require("./Message");
+const ConversationDeletion = require("./ConversationDeletion");
 
 module.exports = {
   User,
   Message,
+  ConversationDeletion,
 };

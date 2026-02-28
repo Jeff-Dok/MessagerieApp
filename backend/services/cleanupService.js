@@ -23,8 +23,8 @@ const logger = require("../utils/logger");
  */
 class CleanupService {
   /**
-   * Nettoie les images expirées
-   * @returns {Promise<number>} Nombre d'images nettoyées
+   * Nettoie les images expirées (suppression complète)
+   * @returns {Promise<number>} Nombre d'images supprimées
    */
   static async cleanupExpiredImages() {
     try {
@@ -36,26 +36,31 @@ class CleanupService {
         return 0;
       }
 
-      // Nettoyer chaque image expirée
-      let cleanedCount = 0;
+      // Supprimer chaque image expirée
+      let deletedCount = 0;
       for (const message of expiredMessages) {
-        await message.expireImage();
-        cleanedCount++;
+        const messageId = message.id;
+        const senderId = message.senderId;
+        const receiverId = message.receiverId;
+
+        // Supprimer complètement le message de la base de données
+        await message.destroy();
+        deletedCount++;
 
         // Notifier via Socket.io si disponible
         if (global.io) {
           const { SocketService } = require("./socketService");
           SocketService.emitToRoom(
-            message.senderId,
-            message.receiverId,
+            senderId,
+            receiverId,
             SOCKET_EVENTS.IMAGE_EXPIRED,
-            { messageId: message.id },
+            { messageId, deleted: true },
           );
         }
       }
 
-      logger.success(`🗑️  ${cleanedCount} image(s) expirée(s) nettoyée(s)`);
-      return cleanedCount;
+      logger.success(`🗑️  ${deletedCount} image(s) expirée(s) supprimée(s)`);
+      return deletedCount;
     } catch (error) {
       logger.error("Erreur lors du nettoyage des images:", error);
       return 0;

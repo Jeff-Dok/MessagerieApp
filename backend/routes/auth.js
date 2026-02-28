@@ -90,4 +90,29 @@ router.post(
   AuthController.checkStatus,
 );
 
+// ============================================
+// ROUTES E2E - Gestion des clés publiques
+// ============================================
+
+/**
+ * @route   POST /api/auth/public-key
+ * @desc    Sauvegarde la clé publique E2E de l'utilisateur
+ * @access  Private
+ */
+router.post("/public-key", authenticate, AuthController.savePublicKey);
+
+/**
+ * @route   GET /api/auth/public-key/:userId
+ * @desc    Récupère la clé publique E2E d'un utilisateur
+ * @access  Private
+ */
+router.get("/public-key/:userId", authenticate, AuthController.getPublicKey);
+
+/**
+ * @route   GET /api/auth/has-e2e-key
+ * @desc    Vérifie si l'utilisateur courant a une clé E2E configurée
+ * @access  Private
+ */
+router.get("/has-e2e-key", authenticate, AuthController.hasE2EKey);
+
 module.exports = router;

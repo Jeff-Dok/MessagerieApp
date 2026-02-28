@@ -35,11 +35,29 @@ router.post(
 );
 
 /**
+ * @route   POST /api/messages/e2e
+ * @desc    Envoie un message texte chiffré E2E
+ * @access  Private
+ */
+router.post("/e2e", authenticate, MessageController.sendE2EMessage);
+
+/**
  * @route   GET /api/messages
  * @desc    Récupère tous les messages de l'utilisateur
  * @access  Private
  */
 router.get("/", authenticate, MessageController.getAllMessages);
+
+/**
+ * @route   GET /api/messages/conversation-users
+ * @desc    Récupère les utilisateurs disponibles pour les conversations (filtre les supprimées)
+ * @access  Private
+ */
+router.get(
+  "/conversation-users",
+  authenticate,
+  MessageController.getConversationUsers
+);
 
 /**
  * @route   GET /api/messages/conversation/:userId
@@ -50,6 +68,35 @@ router.get(
   "/conversation/:userId",
   authenticate,
   MessageController.getConversation,
+);
+
+/**
+ * @route   GET /api/messages/unread/counts
+ * @desc    Récupère le nombre de messages non lus par conversation
+ * @access  Private
+ */
+router.get("/unread/counts", authenticate, MessageController.getUnreadCounts);
+
+/**
+ * @route   PUT /api/messages/conversation/:userId/read
+ * @desc    Marque tous les messages d'une conversation comme lus
+ * @access  Private
+ */
+router.put(
+  "/conversation/:userId/read",
+  authenticate,
+  MessageController.markConversationAsRead
+);
+
+/**
+ * @route   DELETE /api/messages/conversation/:userId
+ * @desc    Supprime une conversation (soft delete jusqu'à ce que les deux utilisateurs suppriment)
+ * @access  Private
+ */
+router.delete(
+  "/conversation/:userId",
+  authenticate,
+  MessageController.deleteConversation
 );
 
 /**

@@ -281,6 +281,119 @@ class AuthController {
       next(error);
     }
   }
+
+  // ============================================
+  // CHIFFREMENT E2E - Gestion des clés publiques
+  // ============================================
+
+  /**
+   * Sauvegarde la clé publique E2E de l'utilisateur
+   * @route POST /api/auth/public-key
+   */
+  static async savePublicKey(req, res, next) {
+    try {
+      const { publicKey } = req.body;
+      const userId = req.user.userId;
+
+      if (!publicKey) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          message: "La clé publique est requise",
+        });
+      }
+
+      // Valider que c'est un JSON valide (format JWK)
+      try {
+        JSON.parse(publicKey);
+      } catch {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          message: "Format de clé publique invalide",
+        });
+      }
+
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
+        });
+      }
+
+      await user.update({ publicKey });
+
+      logger.info(`Clé publique E2E enregistrée pour l'utilisateur ${userId}`);
+
+      res.json({
+        success: true,
+        message: "Clé publique enregistrée avec succès",
+      });
+    } catch (error) {
+      logger.error("Erreur lors de la sauvegarde de la clé publique:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Récupère la clé publique E2E d'un utilisateur
+   * @route GET /api/auth/public-key/:userId
+   */
+  static async getPublicKey(req, res, next) {
+    try {
+      const { userId } = req.params;
+
+      const user = await User.findByPk(userId, {
+        attributes: ["id", "pseudo", "publicKey"],
+      });
+
+      if (!user) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
+        });
+      }
+
+      res.json({
+        success: true,
+        userId: user.id,
+        pseudo: user.pseudo,
+        publicKey: user.publicKey,
+        hasE2EKey: !!user.publicKey,
+      });
+    } catch (error) {
+      logger.error("Erreur lors de la récupération de la clé publique:", error);
+      next(error);
+    }
+  }
+
+  /**
+   * Vérifie si l'utilisateur a une clé E2E configurée
+   * @route GET /api/auth/has-e2e-key
+   */
+  static async hasE2EKey(req, res, next) {
+    try {
+      const userId = req.user.userId;
+
+      const user = await User.findByPk(userId, {
+        attributes: ["id", "publicKey"],
+      });
+
+      if (!user) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: SERVER_MESSAGES.USER.NOT_FOUND,
+        });
+      }
+
+      res.json({
+        success: true,
+        hasE2EKey: !!user.publicKey,
+      });
+    } catch (error) {
+      logger.error("Erreur lors de la vérification de la clé E2E:", error);
+      next(error);
+    }
+  }
 }
 
 module.exports = AuthController;

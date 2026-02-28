@@ -274,6 +274,73 @@ const API = {
   },
 
   // ==========================================
+  // CHIFFREMENT E2E
+  // ==========================================
+
+  /**
+   * Sauvegarde la clé publique E2E de l'utilisateur
+   * @param {string} publicKey - Clé publique en format JWK (JSON string)
+   * @returns {Promise<Object>} Confirmation
+   */
+  async savePublicKey(publicKey) {
+    try {
+      return await this._request('/auth/public-key', {
+        method: 'POST',
+        body: { publicKey }
+      });
+    } catch (error) {
+      this._handleError(error, 'Save Public Key');
+    }
+  },
+
+  /**
+   * Récupère la clé publique E2E d'un utilisateur
+   * @param {number} userId - ID de l'utilisateur
+   * @returns {Promise<Object>} Contient publicKey et hasE2EKey
+   */
+  async getPublicKey(userId) {
+    try {
+      return await this._request(`/auth/public-key/${userId}`, {
+        method: 'GET'
+      });
+    } catch (error) {
+      this._handleError(error, 'Get Public Key');
+    }
+  },
+
+  /**
+   * Vérifie si l'utilisateur courant a une clé E2E configurée
+   * @returns {Promise<Object>} Contient hasE2EKey
+   */
+  async hasE2EKey() {
+    try {
+      return await this._request('/auth/has-e2e-key', {
+        method: 'GET'
+      });
+    } catch (error) {
+      this._handleError(error, 'Has E2E Key');
+    }
+  },
+
+  /**
+   * Envoie un message texte chiffré E2E
+   * @param {number} receiverId - ID du destinataire
+   * @param {string} encryptedContent - Contenu chiffré (base64)
+   * @param {string} iv - IV utilisé pour le chiffrement (base64)
+   * @returns {Promise<Object>} Message créé
+   */
+  async sendE2EMessage(receiverId, encryptedContent, iv) {
+    try {
+      return await this._request('/messages/e2e', {
+        method: 'POST',
+        body: { receiverId, encryptedContent, iv }
+      });
+    } catch (error) {
+      this._handleError(error, 'Send E2E Message');
+    }
+  },
+
+  // ==========================================
   // UTILISATEURS
   // ==========================================
 
@@ -445,6 +512,35 @@ const API = {
   },
 
   /**
+   * Marque tous les messages d'une conversation comme lus
+   * @param {number} userId - ID de l'autre utilisateur dans la conversation
+   * @returns {Promise<Object>} Confirmation avec nombre de messages mis à jour
+   */
+  async markConversationAsRead(userId) {
+    try {
+      return await this._request(`/messages/conversation/${userId}/read`, {
+        method: 'PUT'
+      });
+    } catch (error) {
+      this._handleError(error, 'Mark Conversation As Read');
+    }
+  },
+
+  /**
+   * Récupère le nombre de messages non lus par conversation
+   * @returns {Promise<Object>} Objet avec les compteurs { senderId: count }
+   */
+  async getUnreadCounts() {
+    try {
+      return await this._request('/messages/unread/counts', {
+        method: 'GET'
+      });
+    } catch (error) {
+      this._handleError(error, 'Get Unread Counts');
+    }
+  },
+
+  /**
    * Marque une image comme vue (démarre l'expiration)
    * @param {number} messageId - ID du message image
    * @returns {Promise<Object>} Confirmation avec dates d'expiration
@@ -486,6 +582,37 @@ const API = {
       });
     } catch (error) {
       this._handleError(error, 'Delete Message');
+    }
+  },
+
+  /**
+   * Récupère les utilisateurs disponibles pour les conversations
+   * (filtre automatiquement les conversations supprimées)
+   * @returns {Promise<Object>} Liste des utilisateurs
+   */
+  async getConversationUsers() {
+    try {
+      return await this._request('/messages/conversation-users', {
+        method: 'GET'
+      });
+    } catch (error) {
+      this._handleError(error, 'Get Conversation Users');
+    }
+  },
+
+  /**
+   * Supprime une conversation
+   * (soft delete jusqu'à ce que les deux utilisateurs suppriment)
+   * @param {number} userId - ID de l'autre utilisateur de la conversation
+   * @returns {Promise<Object>} Confirmation de suppression
+   */
+  async deleteConversation(userId) {
+    try {
+      return await this._request(`/messages/conversation/${userId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      this._handleError(error, 'Delete Conversation');
     }
   },
 
@@ -547,16 +674,14 @@ const UserManager = {
 
   /**
    * Récupère les utilisateurs pour les conversations
-   * @param {number} currentUserId - ID de l'utilisateur actuel
+   * (filtre automatiquement les conversations supprimées côté serveur)
+   * @param {number} currentUserId - ID de l'utilisateur actuel (non utilisé, filtré côté serveur)
    * @returns {Promise<Array>} Liste des utilisateurs
    */
   async getConversationUsers(currentUserId) {
     try {
-      const response = await API.getUsers();
-      const users = response.users || [];
-      
-      // Filtrer l'utilisateur actuel
-      return users.filter(u => u.id !== currentUserId);
+      const response = await API.getConversationUsers();
+      return response.users || [];
     } catch (error) {
       console.error('Erreur getConversationUsers:', error);
       return [];

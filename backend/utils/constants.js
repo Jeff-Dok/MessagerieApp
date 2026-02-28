@@ -166,7 +166,7 @@ const IMAGE_CONFIG = {
   MAX_WIDTH: 800,
   MAX_HEIGHT: 800,
   QUALITY: 80,
-  EXPIRATION_TIME: parseInt(process.env.IMAGE_EXPIRATION_TIME) || 5, // minutes
+  EXPIRATION_TIME: parseInt(process.env.IMAGE_EXPIRATION_TIME) || 5, // minutes (300 sec)
 };
 
 /**
@@ -216,7 +216,8 @@ const AGE_CONFIG = {
  * Configuration du nettoyage automatique
  */
 const CLEANUP_CONFIG = {
-  INTERVAL: parseInt(process.env.CLEANUP_INTERVAL) || 1, // minutes
+  INTERVAL: parseFloat(process.env.CLEANUP_INTERVAL) || 0.5, // minutes - fréquence de vérification
+  CLEANUP_DELAY: parseInt(process.env.CLEANUP_DELAY) || 60, // secondes après expiration avant suppression
 };
 
 /**

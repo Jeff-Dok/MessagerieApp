@@ -313,6 +313,50 @@
         border: 2px solid #f59e0b;
         box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
     }
+
+    /* Modal en mode clair */
+    .modal-content {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-header {
+        background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .modal-title {
+        color: #0f172a;
+    }
+
+    .search-input {
+        background-color: #ffffff;
+        border: 2px solid #cbd5e1;
+        color: #0f172a;
+    }
+
+    .search-input:focus {
+        border-color: #6366F1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .search-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .user-result-item:hover {
+        background-color: #f1f5f9;
+        border-color: #6366F1;
+    }
+
+    .user-result-name {
+        color: #0f172a;
+    }
+
+    .user-result-email {
+        color: #64748b;
+    }
 }
 
 /* ============================================
@@ -367,6 +411,25 @@
     input[type="password"]:focus,
     textarea:focus {
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Inputs - couleur du texte en mode sombre */
+    .form-input,
+    .message-input,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea {
+        background: var(--bg-secondary);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .form-input::placeholder,
+    .message-input::placeholder,
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--text-tertiary);
     }
 }
 
@@ -439,6 +502,25 @@
     }
     .alert-error {
         color: rgb(252, 165, 165);
+    }
+
+    /* Séparateur de nouveaux messages en mode sombre */
+    .unread-separator-text {
+        background-color: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Messages E2E non déchiffrables en mode sombre */
+    .message-encrypted-failed {
+        background: linear-gradient(135deg, #422006 0%, #78350f 100%);
+        border-color: #b45309;
+    }
+
+    .message-encrypted-failed .encrypted-text {
+        color: #fde68a;
+    }
+
+    .message-encrypted-failed .encrypted-subtitle {
+        color: #fcd34d;
     }
 }
 

@@ -205,6 +205,16 @@ const User = sequelize.define(
     },
 
     // ============================================
+    // CHIFFREMENT E2E
+    // ============================================
+
+    publicKey: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: "Clé publique ECDH pour le chiffrement E2E (format JWK)",
+    },
+
+    // ============================================
     // RÔLE ET DATES
     // ============================================
 

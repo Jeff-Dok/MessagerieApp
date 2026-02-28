@@ -15,7 +15,8 @@
 
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
-const { MESSAGE_TYPES, IMAGE_CONFIG } = require("../utils/constants");
+const { MESSAGE_TYPES, IMAGE_CONFIG, CLEANUP_CONFIG } = require("../utils/constants");
+const { encryptionService } = require("../services/encryptionService");
 
 /**
  * Modèle Message
@@ -107,6 +108,31 @@ const Message = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       comment: "Indique si l'image a expiré",
+    },
+
+    imageEncrypted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: "Indique si les données de l'image sont chiffrées",
+    },
+
+    // Champs pour le chiffrement E2E des messages texte
+    encryptedContent: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true,
+      comment: "Contenu du message chiffré (E2E)",
+    },
+
+    encryptedKey: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: "Clé AES chiffrée avec la clé publique du destinataire (E2E)",
+    },
+
+    isE2EEncrypted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: "Indique si le message est chiffré de bout en bout",
     },
 
     // État de lecture
@@ -210,16 +236,32 @@ Message.prototype.expireImage = async function () {
 };
 
 /**
- * Retourne le message en version sécurisée (sans données d'image si expirée)
+ * Retourne le message en version sécurisée (sans données d'image si expirée, déchiffrée si nécessaire)
  * @returns {Object} Message en version sécurisée
  */
 Message.prototype.toSecureJSON = function () {
   const data = this.toJSON();
 
-  if (this.messageType === MESSAGE_TYPES.IMAGE && this.isImageExpired()) {
-    data.imageData = null;
-    data.imageExpired = true;
-    data.content = "[Image expirée]";
+  if (this.messageType === MESSAGE_TYPES.IMAGE) {
+    // Si l'image est expirée, ne pas envoyer les données
+    if (this.isImageExpired()) {
+      data.imageData = null;
+      data.imageExpired = true;
+      data.content = "[Image expirée]";
+    }
+    // Si l'image est chiffrée et non expirée, la déchiffrer
+    else if (data.imageEncrypted && data.imageData) {
+      try {
+        const decryptedDataUrl = encryptionService.decryptImageDataUrl(
+          data.imageData,
+          data.imageMimeType
+        );
+        data.imageData = decryptedDataUrl;
+      } catch (error) {
+        console.error("[Message] Erreur déchiffrement image:", error.message);
+        // En cas d'erreur, garder les données telles quelles
+      }
+    }
   }
 
   return data;
@@ -287,19 +329,22 @@ Message.findConversation = async function (userId1, userId2, options = {}) {
 };
 
 /**
- * Trouve les images expirées
- * @returns {Promise<Message[]>} Images expirées
+ * Trouve les images expirées et prêtes pour le nettoyage
+ * (expirées depuis au moins CLEANUP_DELAY secondes)
+ * @returns {Promise<Message[]>} Images à nettoyer
  */
 Message.findExpiredImages = async function () {
   const { Op } = require("sequelize");
-  const now = new Date();
+  // Nettoyer les images dont le timer a expiré depuis CLEANUP_DELAY secondes
+  // On ne filtre plus par imageExpired car l'API expireImage() peut l'avoir mis à true
+  const cleanupThreshold = new Date(Date.now() - CLEANUP_CONFIG.CLEANUP_DELAY * 1000);
 
   return await this.findAll({
     where: {
       messageType: MESSAGE_TYPES.IMAGE,
-      imageExpired: false,
       imageExpiresAt: {
-        [Op.lte]: now,
+        [Op.not]: null,
+        [Op.lte]: cleanupThreshold,
       }
     },
   });

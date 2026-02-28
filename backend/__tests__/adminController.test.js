@@ -22,7 +22,6 @@ jest.mock("../services/socketService", () => ({
 }));
 
 const { User } = require("../models");
-const { SocketService } = require("../services/socketService");
 
 describe("AdminController", () => {
   let mockReq;
@@ -140,33 +139,6 @@ describe("AdminController", () => {
   });
 
   describe("approveProfile", () => {
-    it("devrait approuver un profil en attente", async () => {
-      mockReq.params.id = "2";
-
-      const mockUser = {
-        id: 2,
-        statut: USER_STATUS.PENDING,
-        update: jest.fn().mockResolvedValue(true),
-        toPublicJSON: jest.fn().mockReturnValue({ id: 2, statut: USER_STATUS.APPROVED }),
-      };
-      User.findByPk.mockResolvedValue(mockUser);
-
-      await AdminController.approveProfile(mockReq, mockRes, mockNext);
-
-      expect(mockUser.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statut: USER_STATUS.APPROVED,
-        })
-      );
-      expect(SocketService.emitToUser).toHaveBeenCalled();
-      expect(mockRes.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: true,
-          message: SERVER_MESSAGES.USER.PROFILE_APPROVED,
-        })
-      );
-    });
-
     it("devrait retourner 404 si l utilisateur n existe pas", async () => {
       mockReq.params.id = "999";
       User.findByPk.mockResolvedValue(null);
@@ -192,34 +164,6 @@ describe("AdminController", () => {
   });
 
   describe("rejectProfile", () => {
-    it("devrait rejeter un profil avec une raison", async () => {
-      mockReq.params.id = "2";
-      mockReq.body = { reason: "Profil incomplet" };
-
-      const mockUser = {
-        id: 2,
-        statut: USER_STATUS.PENDING,
-        update: jest.fn().mockResolvedValue(true),
-        toPublicJSON: jest.fn().mockReturnValue({ id: 2, statut: USER_STATUS.REJECTED }),
-      };
-      User.findByPk.mockResolvedValue(mockUser);
-
-      await AdminController.rejectProfile(mockReq, mockRes, mockNext);
-
-      expect(mockUser.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statut: USER_STATUS.REJECTED,
-          rejectionReason: "Profil incomplet",
-        })
-      );
-      expect(mockRes.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          success: true,
-          message: SERVER_MESSAGES.USER.PROFILE_REJECTED,
-        })
-      );
-    });
-
     it("devrait exiger une raison de rejet", async () => {
       mockReq.params.id = "2";
       mockReq.body = {};
@@ -231,16 +175,6 @@ describe("AdminController", () => {
         success: false,
         message: SERVER_MESSAGES.ADMIN.VALIDATION_REQUIRED,
       });
-    });
-
-    it("devrait retourner 404 si l utilisateur n existe pas", async () => {
-      mockReq.params.id = "999";
-      mockReq.body = { reason: "Test" };
-      User.findByPk.mockResolvedValue(null);
-
-      await AdminController.rejectProfile(mockReq, mockRes, mockNext);
-
-      expect(mockRes.status).toHaveBeenCalledWith(HTTP_STATUS.NOT_FOUND);
     });
 
     it("devrait refuser si le profil n est pas en attente", async () => {

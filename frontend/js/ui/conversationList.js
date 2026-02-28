@@ -65,17 +65,21 @@ const ConversationList = {
       item.setAttribute('aria-current', 'true');
     }
 
+    // Container pour le contenu (nom, email)
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'conversation-content';
+
     // Nom de l'utilisateur
     const nameDiv = document.createElement('div');
     nameDiv.className = 'conversation-name';
     nameDiv.textContent = user.nom;
-    item.appendChild(nameDiv);
+    contentDiv.appendChild(nameDiv);
 
     // Email de l'utilisateur
     const emailDiv = document.createElement('div');
     emailDiv.className = 'conversation-email';
     emailDiv.textContent = user.email;
-    item.appendChild(emailDiv);
+    contentDiv.appendChild(emailDiv);
 
     // Badge admin si applicable
     if (user.role === 'admin') {
@@ -83,11 +87,32 @@ const ConversationList = {
       badge.className = 'badge badge-warning';
       badge.textContent = 'Admin';
       badge.style.marginTop = 'var(--spacing-2)';
-      item.appendChild(badge);
+      contentDiv.appendChild(badge);
     }
 
-    // Gestionnaire de clic
-    item.addEventListener('click', () => {
+    item.appendChild(contentDiv);
+
+    // Bouton supprimer
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'conversation-delete-btn';
+    deleteBtn.setAttribute('aria-label', 'Supprimer la conversation');
+    deleteBtn.setAttribute('title', 'Supprimer la conversation');
+    deleteBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        <line x1="10" y1="11" x2="10" y2="17"></line>
+        <line x1="14" y1="11" x2="14" y2="17"></line>
+      </svg>
+    `;
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.confirmDeleteConversation(user);
+    });
+    item.appendChild(deleteBtn);
+
+    // Gestionnaire de clic sur le contenu
+    contentDiv.addEventListener('click', () => {
       this.selectConversation(user);
     });
 
@@ -102,13 +127,64 @@ const ConversationList = {
   },
 
   /**
+   * Affiche une confirmation et supprime la conversation
+   * @param {Object} user - Utilisateur de la conversation à supprimer
+   */
+  async confirmDeleteConversation(user) {
+    const confirmed = confirm(
+      `Voulez-vous vraiment supprimer la conversation avec ${user.nom} ?\n\nLa conversation sera supprimée de votre liste mais restera visible pour l'autre utilisateur jusqu'à ce qu'il la supprime aussi.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await API.deleteConversation(user.id);
+
+      if (response.success) {
+        // Supprimer l'élément du DOM
+        const item = document.querySelector(
+          `.conversation-item[data-user-id="${user.id}"]`
+        );
+        if (item) {
+          item.remove();
+        }
+
+        // Si c'était la conversation active, masquer le chat
+        if (window.selectedUser && window.selectedUser.id === user.id) {
+          window.selectedUser = null;
+          const chatContainer = document.getElementById('chatContainer');
+          const emptyState = document.getElementById('emptyState');
+          if (chatContainer) chatContainer.classList.add('hidden');
+          if (emptyState) emptyState.classList.remove('hidden');
+        }
+
+        // Notification de succès
+        if (typeof Notifications !== 'undefined') {
+          Notifications.success(response.message || 'Conversation supprimée');
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la conversation:', error);
+      if (typeof Notifications !== 'undefined') {
+        Notifications.error('Erreur lors de la suppression');
+      }
+    }
+  },
+
+  /**
    * Sélectionne une conversation
    * @param {Object} user - Utilisateur sélectionné
    */
   async selectConversation(user) {
-    // Sauvegarder l'utilisateur sélectionné globalement
+    // Si l'App est disponible, utiliser sa méthode pour gérer E2E
+    if (window.app && typeof window.app.selectConversation === 'function') {
+      await window.app.selectConversation(user);
+      return;
+    }
+
+    // Fallback si App n'est pas disponible
     window.currentSelectedUser = user;
-    window.selectedUser = user; // Synchroniser avec app.js
+    window.selectedUser = user;
 
     // Mettre à jour l'UI
     this.updateActiveState(user.id);
@@ -122,6 +198,19 @@ const ConversationList = {
     // Rejoindre la room Socket.io
     if (window.socketManager) {
       socketManager.joinConversation(window.currentUser.id, user.id);
+    }
+
+    // Marquer les messages de cette conversation comme lus
+    try {
+      await API.markConversationAsRead(user.id);
+      // Retirer le badge de cette conversation
+      this.removeUnreadBadge(user.id);
+      // Mettre à jour les compteurs via l'app si disponible
+      if (window.app && typeof window.app.loadUnreadCounts === 'function') {
+        await window.app.loadUnreadCounts();
+      }
+    } catch (error) {
+      console.error('Erreur lors du marquage comme lu:', error);
     }
   },
 
@@ -229,8 +318,221 @@ const ConversationList = {
     } else {
       badge.classList.add('hidden');
     }
+  },
+
+  // ==========================================
+  // MODAL NOUVELLE CONVERSATION
+  // ==========================================
+
+  /**
+   * Initialise le modal de nouvelle conversation
+   */
+  initNewConversationModal() {
+    const newBtn = document.getElementById('newConversationBtn');
+    const modal = document.getElementById('newConversationModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const overlay = modal?.querySelector('.modal-overlay');
+    const searchInput = document.getElementById('userSearchInput');
+
+    if (!newBtn || !modal) return;
+
+    // Ouvrir le modal
+    newBtn.addEventListener('click', () => {
+      this.openNewConversationModal();
+    });
+
+    // Fermer le modal
+    closeBtn?.addEventListener('click', () => {
+      this.closeNewConversationModal();
+    });
+
+    overlay?.addEventListener('click', () => {
+      this.closeNewConversationModal();
+    });
+
+    // Fermer avec Échap
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        this.closeNewConversationModal();
+      }
+    });
+
+    // Recherche avec debounce
+    let searchTimeout;
+    searchInput?.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        this.showSearchHint();
+        return;
+      }
+
+      this.showSearchLoading();
+      searchTimeout = setTimeout(() => {
+        this.searchUsers(query);
+      }, 300);
+    });
+
+    console.log('[ConversationList] Modal nouvelle conversation initialisé');
+  },
+
+  /**
+   * Ouvre le modal de nouvelle conversation
+   */
+  openNewConversationModal() {
+    const modal = document.getElementById('newConversationModal');
+    const searchInput = document.getElementById('userSearchInput');
+
+    if (modal) {
+      modal.classList.remove('hidden');
+      searchInput?.focus();
+      this.showSearchHint();
+    }
+  },
+
+  /**
+   * Ferme le modal de nouvelle conversation
+   */
+  closeNewConversationModal() {
+    const modal = document.getElementById('newConversationModal');
+    const searchInput = document.getElementById('userSearchInput');
+
+    if (modal) {
+      modal.classList.add('hidden');
+      if (searchInput) searchInput.value = '';
+      this.showSearchHint();
+    }
+  },
+
+  /**
+   * Affiche le message d'aide pour la recherche
+   */
+  showSearchHint() {
+    const results = document.getElementById('searchResults');
+    if (results) {
+      results.innerHTML = '<p class="search-hint">Tapez un nom pour rechercher des utilisateurs</p>';
+    }
+  },
+
+  /**
+   * Affiche le chargement de la recherche
+   */
+  showSearchLoading() {
+    const results = document.getElementById('searchResults');
+    if (results) {
+      results.innerHTML = '<p class="search-loading">Recherche en cours...</p>';
+    }
+  },
+
+  /**
+   * Recherche des utilisateurs par nom
+   * @param {string} query - Terme de recherche
+   */
+  async searchUsers(query) {
+    const results = document.getElementById('searchResults');
+    if (!results) return;
+
+    try {
+      const response = await API.getUsers({ search: query });
+      const users = response.users || [];
+
+      // Filtrer l'utilisateur actuel
+      const currentUserId = window.currentUser?.id;
+      const filteredUsers = users.filter(u => u.id !== currentUserId);
+
+      if (filteredUsers.length === 0) {
+        results.innerHTML = '<p class="search-no-results">Aucun utilisateur trouvé</p>';
+        return;
+      }
+
+      // Afficher les résultats
+      results.innerHTML = filteredUsers.map(user => this.createUserResultItem(user)).join('');
+
+      // Ajouter les gestionnaires de clic
+      results.querySelectorAll('.user-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const userId = parseInt(item.dataset.userId);
+          const user = filteredUsers.find(u => u.id === userId);
+          if (user) {
+            this.startConversationWithUser(user);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Erreur recherche utilisateurs:', error);
+      results.innerHTML = '<p class="search-no-results">Erreur lors de la recherche</p>';
+    }
+  },
+
+  /**
+   * Crée le HTML d'un résultat de recherche
+   * @param {Object} user - Utilisateur
+   * @returns {string} HTML
+   */
+  createUserResultItem(user) {
+    const initials = user.nom
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+
+    return `
+      <div class="user-result-item" data-user-id="${user.id}">
+        <div class="user-result-avatar">${initials}</div>
+        <div class="user-result-info">
+          <div class="user-result-name">${user.nom}</div>
+          <div class="user-result-email">${user.email}</div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Démarre une conversation avec un utilisateur sélectionné
+   * @param {Object} user - Utilisateur sélectionné
+   */
+  async startConversationWithUser(user) {
+    // Fermer le modal
+    this.closeNewConversationModal();
+
+    // Vérifier si l'utilisateur est déjà dans la liste
+    const existingItem = document.querySelector(`.conversation-item[data-user-id="${user.id}"]`);
+
+    if (!existingItem) {
+      // Ajouter l'utilisateur à la liste des conversations
+      const container = document.getElementById('conversationsList');
+      if (container) {
+        const item = this.createConversationItem(user, null);
+        container.insertBefore(item, container.firstChild);
+
+        // Masquer l'état vide si nécessaire
+        const emptyState = document.getElementById('conversationsEmpty');
+        if (emptyState) {
+          emptyState.classList.add('hidden');
+        }
+      }
+    }
+
+    // Sélectionner la conversation
+    this.selectConversation(user);
+
+    // Notification
+    if (typeof Notifications !== 'undefined') {
+      Notifications.success(`Conversation avec ${user.nom} ouverte`);
+    }
   }
 };
+
+// Initialiser le modal au chargement du DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    ConversationList.initNewConversationModal();
+  });
+} else {
+  ConversationList.initNewConversationModal();
+}
 
 // Export
 if (typeof module !== 'undefined' && module.exports) {
